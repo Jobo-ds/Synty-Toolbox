@@ -170,7 +170,12 @@ def assign_new_generated_material(obj, texture_path, use_emission=True):
 	bsdf = add_bsdf_node_with_inheritance(new_mat, original_material)
 
 	texture_node = None
-	if original_material and has_image_texture(original_material):
+
+	scene = bpy.context.scene
+	force_texture = getattr(scene.asset_processor_settings, "force_texture", False)
+
+	if force_texture or (original_material and has_image_texture(original_material)):
+		print(f"[INFO] Forcing texture on object: {obj.name}")
 		texture_node = add_texture_node(new_mat, bsdf, texture_path)
 
 	shader_output = (

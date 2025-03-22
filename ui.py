@@ -25,10 +25,10 @@ class AssetProcessorSettings(PropertyGroup):
 		subtype='FILE_PATH'
 	) # type: ignore
 
-	use_emission: BoolProperty(
-		name="Use Emission",
-		description="Whether to apply emission layer to materials",
-		default=True
+	force_texture: BoolProperty(
+		name="Always apply texture",
+		description="Apply texture, regardless of original material.",
+		default=False
 	) # type: ignore
 
 	dry_run: BoolProperty(
@@ -129,8 +129,7 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 		# Section: Options (Mockups for now)
 		box = layout.box()
 		box.label(text="Options", icon='PREFERENCES')
-		box.prop(context.scene.asset_processor_settings, "use_emission", text="Use Emission (Mock)")
-		box.prop(context.scene.asset_processor_settings, "dry_run", text="Dry Run (Mock)")
+		box.prop(context.scene.asset_processor_settings, "force_texture", text="Always apply texture")
 
 		# Section: Footer
 		layout.separator()
