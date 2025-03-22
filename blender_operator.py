@@ -7,12 +7,31 @@ from .material_utils import assign_new_generated_material
 
 
 class ASSET_OT_ProcessFBX(Operator):
+	"""
+	Operator to process Synty FBX source files into GLB format.
+
+	This operator imports all FBX files from a specified folder, assigns clean 
+	generated materials to each mesh object using a chosen texture, and exports 
+	each processed file as a GLB.
+	"""	
+	
 	bl_idname = "asset.process_synty_sourcefiles"
 	bl_label = "Process FBX Files"
 	bl_description = "Imports FBX files, creates fresh materials, and exports as GLB"
 	bl_options = {'REGISTER', 'UNDO'}
 
 	def execute(self, context):
+		"""
+		Executes the FBX to GLB conversion process.
+
+		Validates the input folder and texture file, then iterates over all FBX files
+		in the folder. For each file, it imports the FBX, replaces its materials, 
+		and exports the result as a GLB. Shows a summary popup if complex materials are found.
+
+		Returns:
+			{'FINISHED'} if processing completes successfully, otherwise {'CANCELLED'}.
+		"""
+
 		settings = context.scene.asset_processor_settings
 		input_folder = settings.fbx_folder
 		texture_file = settings.texture_file

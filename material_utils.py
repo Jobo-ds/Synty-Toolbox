@@ -3,6 +3,13 @@ from .state import flagged_complex_materials, generated_material_counter
 from .fbx_handler import has_image_texture
 
 def create_new_generated_material():
+	"""
+	Creates a new empty Blender material with a unique name.
+
+	Initializes a node-based material and clears any default nodes.
+	Used to assign a fresh material to imported objects.
+	"""
+
 	global generated_material_counter
 	name = f"Generated_Material_{generated_material_counter:03d}"
 	generated_material_counter += 1
@@ -14,6 +21,13 @@ def create_new_generated_material():
 	return mat
 
 def add_bsdf_node_with_inheritance(material, original_material):
+	"""
+	Adds a Principled BSDF node to the material, inheriting values from the original.
+
+	Copies base color, roughness, metallic, and alpha if a BSDF node exists in the source.
+	Also configures transparency and backface settings.
+	"""
+
 	nodes = material.node_tree.nodes
 	bsdf = nodes.new("ShaderNodeBsdfPrincipled")
 	bsdf.location = (0, 0)
@@ -46,6 +60,13 @@ def add_bsdf_node_with_inheritance(material, original_material):
 	return bsdf
 
 def add_texture_node(material, bsdf_node, texture_path):
+	"""
+	Adds an image texture node and connects it to the BSDF base color input.
+
+	Loads the given texture file and links it into the material.
+	Returns the created texture node for optional reuse.
+	"""
+
 	nodes = material.node_tree.nodes
 	links = material.node_tree.links
 
@@ -58,6 +79,13 @@ def add_texture_node(material, bsdf_node, texture_path):
 	return tex_image  # <-- RETURN IT!
 
 def add_emission_layer(material, bsdf_node, texture_node=None, strength=1.0, factor=0.25):
+	"""
+	Adds an emission node and mixes it with the BSDF for visual enhancement.
+
+	Optional texture input controls the emission color.
+	Returns the mix shader node as the new shader output.
+	"""
+
 	nodes = material.node_tree.nodes
 	links = material.node_tree.links
 
@@ -82,6 +110,13 @@ def add_emission_layer(material, bsdf_node, texture_node=None, strength=1.0, fac
 	return mix
 
 def add_output_node(material, shader_output):
+	"""
+	Adds a Material Output node and connects it to the given shader output.
+
+	Finalizes the material's node tree by linking the shader to the surface output.
+	Should be called last when constructing the shader graph.
+	"""
+
 	nodes = material.node_tree.nodes
 	links = material.node_tree.links
 
@@ -91,6 +126,13 @@ def add_output_node(material, shader_output):
 	links.new(shader_output.outputs[0], output.inputs["Surface"])
 
 def create_error_material(name="ERROR_MATERIAL"):
+	"""
+	Creates a fallback error material with a checker and emission shader.
+
+	Used to visually indicate missing or invalid materials.
+	Returns the created error material.
+	"""
+
 	mat = bpy.data.materials.new(name=name)
 	mat.use_nodes = True
 	mat.blend_method = 'OPAQUE'
@@ -115,21 +157,28 @@ def create_error_material(name="ERROR_MATERIAL"):
 
 
 def assign_new_generated_material(obj, texture_path, use_emission=True):
-    original_material = obj.active_material if obj.active_material else None
+	"""
+	Generates and assigns a new material to the given object.
 
-    new_mat = create_new_generated_material()
-    bsdf = add_bsdf_node_with_inheritance(new_mat, original_material)
+	Inherits base properties, applies a texture, and optionally includes an emission layer.
+	Replaces all existing materials on the object with the new one.
+	"""
 
-    texture_node = None
-    if original_material and has_image_texture(original_material):
-        texture_node = add_texture_node(new_mat, bsdf, texture_path)
+	original_material = obj.active_material if obj.active_material else None
 
-    shader_output = (
-        add_emission_layer(new_mat, bsdf, texture_node)
-        if use_emission else bsdf
-    )
+	new_mat = create_new_generated_material()
+	bsdf = add_bsdf_node_with_inheritance(new_mat, original_material)
 
-    add_output_node(new_mat, shader_output)
+	texture_node = None
+	if original_material and has_image_texture(original_material):
+		texture_node = add_texture_node(new_mat, bsdf, texture_path)
 
-    obj.data.materials.clear()
-    obj.data.materials.append(new_mat)
+	shader_output = (
+		add_emission_layer(new_mat, bsdf, texture_node)
+		if use_emission else bsdf
+	)
+
+	add_output_node(new_mat, shader_output)
+
+	obj.data.materials.clear()
+	obj.data.materials.append(new_mat)
