@@ -66,7 +66,7 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 	Popup dialog for selecting input FBX folder and texture file.
 
 	Stores input values into the scene settings and triggers processing.
-	Also displays mock toggle options and a basic UI layout.
+	Also displays toggle options from the sidebar configuration.
 	"""
 
 	bl_idname = "asset.open_texture_folder_popup"
@@ -76,45 +76,33 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 	input_folder: StringProperty(name="Input Folder", subtype='DIR_PATH')
 
 	def execute(self, context):
-		"""
-		Validates user input and starts the FBX processing operation.
+		texture_path = self.texture_file
+		folder_path = self.input_folder
 
-		Stores folder and texture path into scene settings and invokes processing.
-		Returns {'FINISHED'} on success, otherwise {'CANCELLED'} on invalid input.
-		"""
-
-		if not os.path.isfile(self.texture_file):
-			self.report({'ERROR'}, "Please select a valid texture file.")
-			return {'CANCELLED'}
-
-		if not os.path.isdir(self.input_folder):
-			self.report({'ERROR'}, "Please select a valid FBX folder.")
-			return {'CANCELLED'}
-
-		# Store values in the Scene's settings for the actual processor to use
+		# Store popup values into the global scene settings
 		settings = context.scene.asset_processor_settings
-		settings.texture_file = self.texture_file
-		settings.fbx_folder = self.input_folder
+		settings.texture_file = texture_path
+		settings.fbx_folder = folder_path
 
+		# Now invoke the processing operator
 		bpy.ops.asset.process_synty_sourcefiles('INVOKE_DEFAULT')
-		return {'FINISHED'}
 
+		return {'FINISHED'}
 
 	def invoke(self, context, event):
 		"""
-		Opens the popup dialog with defined layout and width.
-
-		Called automatically when operator is invoked.
+		Pre-fills popup fields with values from the scene settings.
 		"""
-		
-		wm = context.window_manager
-		return wm.invoke_props_dialog(self, width=500)
+
+		settings = context.scene.asset_processor_settings
+		self.texture_file = settings.texture_file
+		self.input_folder = settings.fbx_folder
+
+		return context.window_manager.invoke_props_dialog(self, width=500)
 
 	def draw(self, context):
 		"""
-		Draws the UI for the popup dialog, including path inputs and options.
-
-		Organized into sections for input files, mock options, and footer message.
+		Draws the UI for the popup dialog, including path inputs and scene-linked options.
 		"""
 
 		layout = self.layout
@@ -129,16 +117,16 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 		box.prop(self, "input_folder", text="FBX Folder")
 		box.prop(self, "texture_file", text="Texture Image")
 
-		# Section: Options
+		# Section: Options (from scene settings)
 		col = box.column(align=True)
 		col.label(text="Options", icon='PREFERENCES')
 		col.prop(context.scene.asset_processor_settings, "force_texture", text="Always apply texture")
-		col.prop(context.scene.asset_processor_settings, "character_rotate_fix", text="Fix Character Rotation")	
-		
-		
+		col.prop(context.scene.asset_processor_settings, "character_rotate_fix", text="Fix Character Rotation")
+
 		# Section: Footer
 		layout.separator()
 		layout.label(text="Click OK to start processing.", icon='INFO')
+
 
 
 class ASSET_OT_ReloadAddon(bpy.types.Operator):

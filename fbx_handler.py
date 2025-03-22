@@ -21,27 +21,53 @@ def import_fbx(filepath):
 	Imports an FBX file into the current Blender scene.
 
 	Uses Blender's built-in FBX importer to load the specified file.
-	Called during processing to bring in source assets.
+	Applies optional rotation fix and cleans up common import clutter.
 	"""
 
 	force_rotate = getattr(bpy.context.scene.asset_processor_settings, "character_rotate_fix", False)
 
+	# Import FBX
 	bpy.ops.import_scene.fbx(filepath=filepath)
+
+	# Debug: print all objects after import
+	print("[DEBUG] All objects after FBX import:")
+	for obj in bpy.context.scene.objects:
+		print(f" - {obj.name} ({obj.type})")
 
 	# Optional rotation fix
 	if force_rotate:
 		import math
-		angle = math.radians(-90)
+		armature = next((o for o in bpy.context.scene.objects if o.type == 'ARMATURE'), None)
 
-		for obj in bpy.context.selected_objects:
-			if obj.type in {'MESH', 'ARMATURE'}:
-				obj.rotation_euler[0] += angle
+		if armature:
+			print(f"[ROTATE FIX] Rotating armature: {armature.name}")
+			armature.rotation_euler = (
+				math.radians(90),   # Stand upright
+				0,                  # No flip
+				0				   # Turn around to face the camera/front
+			)
 
-		bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+
+			bpy.context.view_layer.objects.active = armature
+			bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+		else:
+			print("[ROTATE FIX] Armature not found — skipping rotation.")
+
+	# Clean up common FBX clutter
+	for obj in list(bpy.context.scene.objects):
+		name = obj.name.lower()
+		if name.startswith("iconosphere") or name.startswith("root.001"):
+			print(f"[CLEANUP] Removing: {obj.name}")
+			bpy.data.objects.remove(obj, do_unlink=True)	
+
+	# Remove Blender's hidden GLTF helper collection
+	gltf_collection = bpy.data.collections.get("glTF_not_exported")
+	if gltf_collection:
+		bpy.data.collections.remove(gltf_collection)
+		print("[CLEANUP] Removed glTF_not_exported collection")
 
 
 
-	bpy.ops.import_scene.fbx(filepath=filepath)
 
 def has_image_texture(material):
 	"""
