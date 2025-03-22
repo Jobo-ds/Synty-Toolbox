@@ -1,13 +1,4 @@
 
-bl_info = {
-    "name": "Converter for Synty Sourcefiles",
-    "author": "Joe",
-    "version": (1, 0, 0),
-    "blender": (2, 93, 0),
-    "location": "View3D > Sidebar > Asset Tools",
-    "description": "Converts sourcefiles from Synty Studios to GLB.",
-    "category": "Import-Export",
-}
 
 # Global to store complex materials info
 flagged_complex_materials = []
@@ -21,8 +12,6 @@ import os
 # ------------------------- Globals
 
 generated_material_counter = 1  # Global or passed-in tracker
-bpy.ops.asset.process_synty_sourcefiles()
-
 
 # ------------------------- Import FBX
 def clear_scene():
@@ -288,6 +277,8 @@ class ASSET_OT_ProcessFBX(Operator):
 
         self.report({'INFO'}, f"Processed {len(fbx_files)} file(s).")
         clear_scene()
+        global generated_material_counter
+        generated_material_counter = 0
 
         if flagged_complex_materials:
             bpy.ops.asset.debug_summary('INVOKE_DEFAULT')
