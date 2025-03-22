@@ -14,7 +14,7 @@ class ASSET_OT_ProcessFBX(Operator):
 	generated materials to each mesh object using a chosen texture, and exports 
 	each processed file as a GLB.
 	"""	
-	
+
 	bl_idname = "asset.process_synty_sourcefiles"
 	bl_label = "Process FBX Files"
 	bl_description = "Imports FBX files, creates fresh materials, and exports as GLB"
@@ -54,8 +54,6 @@ class ASSET_OT_ProcessFBX(Operator):
 			self.report({'WARNING'}, "No FBX files found")
 			return {'CANCELLED'}
 
-		use_emission = True  # Future: make this a toggle in the UI
-
 		for fbx_file in fbx_files:
 			print(f"\n[PROCESSING] {fbx_file}")
 			clear_scene()
@@ -64,7 +62,7 @@ class ASSET_OT_ProcessFBX(Operator):
 			# Assign new generated material to each mesh object
 			for obj in bpy.context.scene.objects:
 				if obj.type == 'MESH':
-					assign_new_generated_material(obj, texture_file, use_emission=use_emission)
+					assign_new_generated_material(obj, texture_file)
 
 			export_as_glb(fbx_file, output_folder)
 

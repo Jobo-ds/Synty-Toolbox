@@ -24,6 +24,23 @@ def import_fbx(filepath):
 	Called during processing to bring in source assets.
 	"""
 
+	force_rotate = getattr(bpy.context.scene.asset_processor_settings, "character_rotate_fix", False)
+
+	bpy.ops.import_scene.fbx(filepath=filepath)
+
+	# Optional rotation fix
+	if force_rotate:
+		import math
+		angle = math.radians(-90)
+
+		for obj in bpy.context.selected_objects:
+			if obj.type in {'MESH', 'ARMATURE'}:
+				obj.rotation_euler[0] += angle
+
+		bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+
+
+
 	bpy.ops.import_scene.fbx(filepath=filepath)
 
 def has_image_texture(material):

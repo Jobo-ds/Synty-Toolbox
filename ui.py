@@ -3,13 +3,14 @@ import os
 from bpy.types import Panel, PropertyGroup
 from bpy.props import StringProperty, BoolProperty  
 from .state import flagged_complex_materials, generated_material_counter
+import importlib
+import sys
 
 # Property Group to store settings
 class AssetProcessorSettings(PropertyGroup):
 	"""
 	Holds all user-configurable options for the asset processor.
 
-	Includes folder paths and toggle options like 'use_emission' and 'dry_run'.
 	Stored in the Scene to persist between Blender sessions.
 	"""
 
@@ -31,9 +32,9 @@ class AssetProcessorSettings(PropertyGroup):
 		default=False
 	) # type: ignore
 
-	dry_run: BoolProperty(
-		name="Dry Run",
-		description="Simulate the process without exporting GLB files",
+	character_rotate_fix: BoolProperty(
+		name="Character Rotate Fix",
+		description="Rotate characters upright after import (e.g. if they appear face-down)",
 		default=False
 	) # type: ignore
 
@@ -55,6 +56,8 @@ class ASSET_PT_ProcessorPanel(bpy.types.Panel):
 	def draw(self, context):
 		layout = self.layout
 		layout.operator("asset.open_texture_folder_popup", text="Open Synty Converter")
+		layout.separator()
+		layout.operator("asset.reload_synty_addon", icon='FILE_REFRESH', text="Reload Addon (Dev)")		
 
 
 # Pop-up Window
@@ -126,15 +129,49 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 		box.prop(self, "input_folder", text="FBX Folder")
 		box.prop(self, "texture_file", text="Texture Image")
 
-		# Section: Options (Mockups for now)
-		box = layout.box()
-		box.label(text="Options", icon='PREFERENCES')
-		box.prop(context.scene.asset_processor_settings, "force_texture", text="Always apply texture")
-
+		# Section: Options
+		col = box.column(align=True)
+		col.label(text="Options", icon='PREFERENCES')
+		col.prop(context.scene.asset_processor_settings, "force_texture", text="Always apply texture")
+		col.prop(context.scene.asset_processor_settings, "character_rotate_fix", text="Fix Character Rotation")	
+		
+		
 		# Section: Footer
 		layout.separator()
 		layout.label(text="Click OK to start processing.", icon='INFO')
 
+
+class ASSET_OT_ReloadAddon(bpy.types.Operator):
+	bl_idname = "asset.reload_synty_addon"
+	bl_label = "Reload Addon"
+	bl_description = "Unregisters and reloads the Synty Sourcefile Converter addon"
+
+	def execute(self, context):
+		addon_name = __package__  # dynamically gets your addon folder name
+
+		if addon_name not in sys.modules:
+			self.report({'ERROR'}, f"Addon module '{addon_name}' not found in sys.modules")
+			return {'CANCELLED'}
+
+		module = sys.modules[addon_name]
+
+		try:
+			if hasattr(module, 'unregister'):
+				module.unregister()
+
+			importlib.reload(module)
+
+			if hasattr(module, 'register'):
+				module.register()
+
+			self.report({'INFO'}, f"Reloaded addon: {addon_name}")
+		except Exception as e:
+			self.report({'ERROR'}, f"Reload failed: {e}")
+			import traceback
+			traceback.print_exc()
+			return {'CANCELLED'}
+
+		return {'FINISHED'}
 
 
 # Debug Summary Window
@@ -238,6 +275,7 @@ classes = (
 	ASSET_OT_DebugSummary,
 	ASSET_OT_DebugSummaryContinue,
 	ASSET_OT_DebugSummaryCancel,
+	ASSET_OT_ReloadAddon,
 )
 
 def register():

@@ -18,7 +18,9 @@ def register():
 
 	blender_operator.bpy.utils.register_class(blender_operator.ASSET_OT_ProcessFBX)
 	ui.bpy.utils.register_class(ui.ASSET_PT_ProcessorPanel)
-	ui.bpy.utils.register_class(ui.ASSET_OT_OpenTextureFolderPopup)  # <-- ADD THIS LINE
+	ui.bpy.utils.register_class(ui.ASSET_OT_OpenTextureFolderPopup)
+	ui.bpy.utils.register_class(ui.ASSET_OT_ReloadAddon)
+
 
 	debug_ui.register_debug_operators()
 
@@ -28,7 +30,9 @@ def unregister():
 	
 	ui.bpy.utils.unregister_class(ui.ASSET_PT_ProcessorPanel)
 	blender_operator.bpy.utils.unregister_class(blender_operator.ASSET_OT_ProcessFBX)
-	ui.bpy.utils.unregister_class(ui.ASSET_OT_OpenTextureFolderPopup)  # <-- AND THIS LINE TOO
+	ui.bpy.utils.unregister_class(ui.ASSET_OT_OpenTextureFolderPopup)
+	ui.bpy.utils.unregister_class(ui.ASSET_OT_ReloadAddon)
+
 
 	del ui.bpy.types.Scene.asset_processor_settings
 

@@ -156,7 +156,7 @@ def create_error_material(name="ERROR_MATERIAL"):
 	return mat
 
 
-def assign_new_generated_material(obj, texture_path, use_emission=True):
+def assign_new_generated_material(obj, texture_path):
 	"""
 	Generates and assigns a new material to the given object.
 
@@ -180,7 +180,6 @@ def assign_new_generated_material(obj, texture_path, use_emission=True):
 
 	shader_output = (
 		add_emission_layer(new_mat, bsdf, texture_node)
-		if use_emission else bsdf
 	)
 
 	add_output_node(new_mat, shader_output)
