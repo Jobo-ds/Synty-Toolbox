@@ -12,37 +12,48 @@ class ASSET_OT_ProcessFBX(Operator):
 	Operator to process Synty FBX source files into GLB format.
 
 	This operator imports all FBX files from a specified folder, assigns clean 
-	generated materials to each mesh object using a chosen texture, and exports 
-	each processed file as a GLB.
+	generated materials to each mesh object using a chosen texture and optional normal map,
+	and exports each processed file as a GLB.
 	"""	
-
+	
 	bl_idname = "asset.process_synty_sourcefiles"
 	bl_label = "Process FBX Files"
 	bl_description = "Imports FBX files, creates fresh materials, and exports as GLB"
 	bl_options = {'REGISTER', 'UNDO'}
 
 	def execute(self, context):
-		"""
-		Executes the FBX to GLB conversion process.
-
-		Validates the input folder and texture file, then iterates over all FBX files
-		in the folder. For each file, it imports the FBX, replaces its materials, 
-		and exports the result as a GLB. Shows a summary popup if complex materials are found.
-
-		Returns:
-			{'FINISHED'} if processing completes successfully, otherwise {'CANCELLED'}.
-		"""
-
 		settings = context.scene.asset_processor_settings
 		input_folder = settings.fbx_folder
 		texture_file = settings.texture_file
+		normalmap_file = settings.normal_map_file
 
+		# Auto-detect base color texture
+		if not texture_file and settings.auto_find_texture:
+			for filename in os.listdir(input_folder):
+				if filename.lower().endswith(".png") and "normal" not in filename.lower():
+					texture_file = os.path.join(input_folder, filename)
+					print(f"[AUTO-TEXTURE] Using found texture: {texture_file}")
+					break
+
+		# Auto-detect normal map
+		if not normalmap_file and settings.auto_find_normal:
+			for filename in os.listdir(input_folder):
+				if "normal" in filename.lower() and filename.lower().endswith(".png"):
+					normalmap_file = os.path.join(input_folder, filename)
+					print(f"[AUTO-NORMAL] Using found normal map: {normalmap_file}")
+					break
+
+		# Store updated values back to settings
+		settings.texture_file = texture_file
+		settings.normal_map_file = normalmap_file
+
+		# Validate folder and texture requirements
 		if not os.path.isdir(input_folder):
 			self.report({'ERROR'}, "Invalid FBX folder")
 			return {'CANCELLED'}
 
-		if not os.path.isfile(texture_file):
-			self.report({'ERROR'}, "Invalid texture file")
+		if not texture_file and not normalmap_file:
+			self.report({'ERROR'}, "No texture or normal map specified or found.")
 			return {'CANCELLED'}
 
 		output_folder = create_output_folder(input_folder)
@@ -60,15 +71,16 @@ class ASSET_OT_ProcessFBX(Operator):
 			clear_scene()
 			import_fbx(fbx_file)
 
-			# Assign new generated material to each mesh object
+			# Assign generated materials
 			for obj in bpy.context.scene.objects:
 				if obj.type == 'MESH':
-					assign_new_generated_material(obj, texture_file)
+					assign_new_generated_material(obj, texture_file, normalmap_file)
 
 			export_as_glb(fbx_file, output_folder)
 
 		self.report({'INFO'}, f"Processed {len(fbx_files)} file(s).")
 		clear_scene()
+
 		global generated_material_counter
 		generated_material_counter = 0
 

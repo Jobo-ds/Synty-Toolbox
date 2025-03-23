@@ -19,11 +19,29 @@ class AssetProcessorSettings(PropertyGroup):
 		description="Folder containing FBX files to process",
 		subtype='DIR_PATH'
 	) # type: ignore
-
+	
 	texture_file: StringProperty(
-		name="Texture Image",
-		description="Base color texture to apply to models",
+		name="Base Color Texture",
+		description="Optional texture to apply to material",
 		subtype='FILE_PATH'
+	) # type: ignore
+
+	auto_find_texture: BoolProperty(
+		name="Auto-detect texture",
+		description="Search for a texture in the input folder if blank",
+		default=True
+	) # type: ignore
+
+	normal_map_file: StringProperty(
+		name="Normal Map",
+		description="Optional normal map to apply to the material",
+		subtype='FILE_PATH'
+	 ) # type: ignore
+
+	auto_find_normal: BoolProperty(
+		name="Auto-detect normal map",
+		description="Search for a normal map in the folder if none is provided",
+		default=True
 	) # type: ignore
 
 	force_texture: BoolProperty(
@@ -80,15 +98,15 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 
 	texture_file: StringProperty(name="Texture File", subtype='FILE_PATH')
 	input_folder: StringProperty(name="Input Folder", subtype='DIR_PATH')
+	normal_map_file: StringProperty(name="Normal Map", subtype='FILE_PATH')
 
 	def execute(self, context):
-		texture_path = self.texture_file
-		folder_path = self.input_folder
-
-		# Store popup values into the global scene settings
 		settings = context.scene.asset_processor_settings
-		settings.texture_file = texture_path
-		settings.fbx_folder = folder_path
+
+		# Store popup values into scene settings
+		settings.texture_file = self.texture_file
+		settings.normal_map_file = self.normal_map_file
+		settings.fbx_folder = self.input_folder
 
 		# Now invoke the processing operator
 		bpy.ops.asset.process_synty_sourcefiles('INVOKE_DEFAULT')
@@ -120,8 +138,12 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 		# Section: Input Paths
 		box = layout.box()
 		box.label(text="Input Files", icon='FOLDER_REDIRECT')
-		box.prop(self, "input_folder", text="FBX Folder")
-		box.prop(self, "texture_file", text="Texture Image")
+		box.prop(self, "input_folder", text="Input FBX Folder")
+		box.prop(self, "texture_file", text="Base Color Texture")
+		box.prop(context.scene.asset_processor_settings, "auto_find_texture")
+
+		box.prop(self, "normal_map_file", text="Normal Map")
+		box.prop(context.scene.asset_processor_settings, "auto_find_normal")
 
 		# Section: Options (from scene settings)
 		col = box.column(align=True)

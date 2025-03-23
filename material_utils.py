@@ -171,31 +171,47 @@ def create_error_material(name="ERROR_MATERIAL"):
 	return mat
 
 
-def assign_new_generated_material(obj, texture_path):
+def assign_new_generated_material(obj, texture_path=None, normal_map_path=None):
 	"""
 	Generates and assigns a new material to the given object.
 
-	Inherits base properties, applies a texture, and optionally includes an emission layer.
+	Applies optional base color texture and normal map based on input paths and user settings.
 	Replaces all existing materials on the object with the new one.
 	"""
 
 	original_material = obj.active_material if obj.active_material else None
-
 	new_mat = create_new_generated_material()
 	bsdf = add_bsdf_node_with_inheritance(new_mat, original_material)
+
+	nodes = new_mat.node_tree.nodes
+	links = new_mat.node_tree.links
 
 	texture_node = None
 
 	scene = bpy.context.scene
 	force_texture = getattr(scene.asset_processor_settings, "force_texture", False)
 
-	if force_texture or (original_material and has_image_texture(original_material)):
-		print(f"[INFO] Forcing texture on object: {obj.name}")
+	# Apply base color texture if allowed
+	if texture_path and (force_texture or (original_material and has_image_texture(original_material))):
+		print(f"[INFO] Applying base color texture to: {obj.name}")
 		texture_node = add_texture_node(new_mat, bsdf, texture_path)
 
-	shader_output = (
-		add_emission_layer(new_mat, bsdf, texture_node)
-	)
+	# Add emission layer based on texture (if available)
+	shader_output = add_emission_layer(new_mat, bsdf, texture_node)
+
+	# Optional: Apply normal map if provided
+	if normal_map_path:
+		print(f"[INFO] Applying normal map to: {obj.name}")
+		normal_node = nodes.new("ShaderNodeTexImage")
+		normal_node.image = bpy.data.images.load(normal_map_path, check_existing=True)
+		normal_node.image.colorspace_settings.name = 'Non-Color'
+		normal_node.location = (-300, -300)
+
+		normal_map = nodes.new("ShaderNodeNormalMap")
+		normal_map.location = (-100, -300)
+
+		links.new(normal_node.outputs["Color"], normal_map.inputs["Color"])
+		links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
 
 	add_output_node(new_mat, shader_output)
 
