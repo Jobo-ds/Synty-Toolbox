@@ -38,6 +38,12 @@ class AssetProcessorSettings(PropertyGroup):
 		default=False
 	) # type: ignore
 
+	auto_normalize_scale: BoolProperty(
+		name="Attempt normalize scale of meshes",
+		description="Attempt to rescale meshes by looking for small (x < 1cm) and large (x > 150m) meshes.",
+		default=False
+	) # type: ignore	
+
 
 class ASSET_PT_ProcessorPanel(bpy.types.Panel):
 	"""
@@ -122,6 +128,7 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 		col.label(text="Options", icon='PREFERENCES')
 		col.prop(context.scene.asset_processor_settings, "force_texture", text="Always apply texture")
 		col.prop(context.scene.asset_processor_settings, "character_rotate_fix", text="Fix Character Rotation")
+		col.prop(context.scene.asset_processor_settings, "auto_normalize_scale", text="Attempt to normalize scale of meshes")
 
 		# Section: Footer
 		layout.separator()

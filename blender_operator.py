@@ -2,8 +2,9 @@ import bpy
 import os
 from bpy.types import Operator
 from .state import flagged_complex_materials, generated_material_counter
-from .fbx_handler import create_output_folder, get_fbx_files_in_folder, clear_scene, import_fbx, export_as_glb
+from .fbx_handler import create_output_folder, get_fbx_files_in_folder, import_fbx, export_as_glb
 from .material_utils import assign_new_generated_material
+from .blender_utils import clear_scene
 
 
 class ASSET_OT_ProcessFBX(Operator):
