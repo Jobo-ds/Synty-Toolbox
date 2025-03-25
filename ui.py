@@ -59,13 +59,13 @@ class AssetProcessorSettings(PropertyGroup):
 	auto_normalize_scale: BoolProperty(
 		name="Attempt normalize scale of meshes",
 		description="Attempt to rescale meshes by looking for small (x < 1cm) and large (x > 150m) meshes.",
-		default=False
+		default=True
 	) # type: ignore	
 
 	sort_folder: StringProperty(
 		name="Sort Folder",
 		description="Folder containing FBX files to sort",
-		subtype='DIR_PATH'
+		subtype='DIR_PATH',
 	) # type: ignore	
 
 

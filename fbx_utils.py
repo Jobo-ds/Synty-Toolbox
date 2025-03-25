@@ -35,20 +35,15 @@ def clean_up_clutter(obj):
 		bpy.data.objects.remove(obj, do_unlink=True)
 		
 def rotate_armatures(obj):
-	armature = None
-	if obj.type == 'ARMATURE':
-		obj = armature
+	if obj.type != 'ARMATURE':
+		return
 
-	if armature:
-		print(f"[ROTATE FIX] Rotating armature: {armature.name}")
-		armature.rotation_euler = (
-			math.radians(90),   # Stand upright
-			0,                  # No flip
-			0				   # Turn around to face the camera/front
-		)
+	print(f"[ROTATE FIX] Rotating armature: {obj.name}")
+	obj.rotation_euler = (
+		math.radians(90),   # Stand upright
+		0,                  # No flip
+		0                   # Face forward
+	)
 
-
-		bpy.context.view_layer.objects.active = armature
-		bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-	else:
-		print("[ROTATE FIX] Armature not found — skipping rotation.")
+	bpy.context.view_layer.objects.active = obj
+	bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
