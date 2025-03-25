@@ -9,34 +9,16 @@ bl_info = {
 	"category": "Import-Export",
 }
 
-from . import blender_operator, ui, debug_ui
-import bpy
+from . import blender_operator, ui, debug_ui, file_sorter
 
 def register():
-	ui.bpy.utils.register_class(ui.AssetProcessorSettings)
-	ui.bpy.types.Scene.asset_processor_settings = ui.bpy.props.PointerProperty(type=ui.AssetProcessorSettings)
-
-	blender_operator.bpy.utils.register_class(blender_operator.ASSET_OT_ProcessFBX)
-	ui.bpy.utils.register_class(ui.ASSET_PT_ProcessorPanel)
-	ui.bpy.utils.register_class(ui.ASSET_OT_OpenTextureFolderPopup)
-	ui.bpy.utils.register_class(ui.ASSET_OT_ReloadAddon)
-
-
-	debug_ui.register_debug_operators()
-
+    ui.register()
+    blender_operator.bpy.utils.register_class(blender_operator.ASSET_OT_ProcessFBX)
+    file_sorter.register()
+    debug_ui.register_debug_operators()
 
 def unregister():
-	debug_ui.unregister_debug_operators()
-	
-	ui.bpy.utils.unregister_class(ui.ASSET_PT_ProcessorPanel)
-	blender_operator.bpy.utils.unregister_class(blender_operator.ASSET_OT_ProcessFBX)
-	ui.bpy.utils.unregister_class(ui.ASSET_OT_OpenTextureFolderPopup)
-	ui.bpy.utils.unregister_class(ui.ASSET_OT_ReloadAddon)
-
-
-	del ui.bpy.types.Scene.asset_processor_settings
-
-	try:
-		ui.bpy.utils.unregister_class(ui.AssetProcessorSettings)
-	except RuntimeError:
-		pass
+    debug_ui.unregister_debug_operators()
+    file_sorter.unregister()
+    blender_operator.bpy.utils.unregister_class(blender_operator.ASSET_OT_ProcessFBX)
+    ui.unregister()

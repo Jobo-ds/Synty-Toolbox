@@ -41,6 +41,14 @@ def import_fbx(filepath):
 	# Import FBX
 	bpy.ops.import_scene.fbx(filepath=filepath)
 
+	#Apply scale 1.0
+	for obj in bpy.context.selected_objects:
+		bpy.context.view_layer.objects.active = obj
+		try:
+			bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+		except RuntimeError:
+			print(f"[SKIP] Could not apply transform to {obj.name} ({obj.type})")	
+
 	# Operations on objects
 	for obj in list(bpy.context.scene.objects):
 		# Clean up common FBX clutter

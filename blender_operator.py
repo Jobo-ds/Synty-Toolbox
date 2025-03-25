@@ -3,7 +3,7 @@ import os
 from bpy.types import Operator
 from .state import flagged_complex_materials, generated_material_counter
 from .fbx_handler import create_output_folder, get_fbx_files_in_folder, import_fbx, export_as_glb
-from .material_utils import assign_new_generated_material
+from .material_utils import assign_new_generated_material, create_error_material
 from .blender_utils import clear_scene
 
 
@@ -53,8 +53,7 @@ class ASSET_OT_ProcessFBX(Operator):
 			return {'CANCELLED'}
 
 		if not texture_file and not normalmap_file:
-			self.report({'ERROR'}, "No texture or normal map specified or found.")
-			return {'CANCELLED'}
+			self.report({'WARNING'}, "No texture or normal map found — proceeding with base material only.")
 
 		output_folder = create_output_folder(input_folder)
 		if not output_folder:
@@ -86,5 +85,10 @@ class ASSET_OT_ProcessFBX(Operator):
 
 		if flagged_complex_materials:
 			bpy.ops.asset.debug_summary('INVOKE_DEFAULT')
+
+		if settings.auto_find_texture:
+			settings.texture_file = ""
+		if settings.auto_find_normal:
+			settings.normal_map_file = ""
 
 		return {'FINISHED'}

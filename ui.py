@@ -62,6 +62,12 @@ class AssetProcessorSettings(PropertyGroup):
 		default=False
 	) # type: ignore	
 
+	sort_folder: StringProperty(
+		name="Sort Folder",
+		description="Folder containing FBX files to sort",
+		subtype='DIR_PATH'
+	) # type: ignore	
+
 
 class ASSET_PT_ProcessorPanel(bpy.types.Panel):
 	"""
@@ -79,9 +85,12 @@ class ASSET_PT_ProcessorPanel(bpy.types.Panel):
 
 	def draw(self, context):
 		layout = self.layout
-		layout.operator("asset.open_texture_folder_popup", text="Open Synty Converter")
+		layout.operator("asset.open_texture_folder_popup", text="Open Synty Converter", icon='FILE_3D')
 		layout.separator()
-		layout.operator("asset.reload_synty_addon", icon='FILE_REFRESH', text="Reload Addon (Dev)")		
+		layout.operator("asset.open_sort_popup", text="Open Sort Tool", icon='FILE_FOLDER')  # <-- this is your sort tool
+		layout.separator()
+		layout.operator("asset.reload_synty_addon", text="Reload Addon (Dev)", icon='FILE_REFRESH')
+
 
 
 # Pop-up Window
@@ -156,6 +165,21 @@ class ASSET_OT_OpenTextureFolderPopup(bpy.types.Operator):
 		layout.separator()
 		layout.label(text="Click OK to start processing.", icon='INFO')
 
+class ASSET_OT_OpenSortPopup(bpy.types.Operator):
+	bl_idname = "asset.open_sort_popup"
+	bl_label = "Open Sort Tool"
+
+	def execute(self, context):
+		return {'FINISHED'}  # You’re not doing anything here yet
+
+	def invoke(self, context, event):
+		return context.window_manager.invoke_popup(self, width=400)
+
+	def draw(self, context):
+		layout = self.layout
+		props = context.scene.asset_processor_settings
+		layout.prop(props, "sort_folder")
+		layout.operator("asset.sort_files_by_name", icon="FILE_FOLDER", text="Sort Files")
 
 
 class ASSET_OT_ReloadAddon(bpy.types.Operator):
@@ -293,6 +317,7 @@ classes = (
 	ASSET_OT_DebugSummaryContinue,
 	ASSET_OT_DebugSummaryCancel,
 	ASSET_OT_ReloadAddon,
+	ASSET_OT_OpenSortPopup
 )
 
 def register():
