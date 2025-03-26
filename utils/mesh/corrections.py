@@ -1,6 +1,8 @@
+# utils/mesh/corrections.py
+
 import bpy
 import math
-from .blender_utils import get_object_dimensions
+from .blender import get_object_dimensions
 
 
 def normalize_object_scale(obj):
@@ -28,12 +30,7 @@ def normalize_object_scale(obj):
 
 	return None
 		
-def clean_up_clutter(obj):
-	name = obj.name.lower()
-	if name.startswith("iconosphere") or name.startswith("root.001"):
-		print(f"[CLEANUP] Removing: {obj.name}")
-		bpy.data.objects.remove(obj, do_unlink=True)
-		
+	
 def rotate_armatures(obj):
 	if obj.type != 'ARMATURE':
 		return

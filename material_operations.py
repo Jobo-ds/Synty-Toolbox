@@ -1,21 +1,6 @@
 import bpy
-from .state import flagged_complex_materials, generated_material_counter
-
-def has_image_texture(material):
-	"""
-	Checks if a material contains an image texture node.
-
-	Iterates over all nodes in the material's node tree to find a valid image.
-	Used to determine whether to reuse texture input or generate a new material.
-	"""
-
-	if not material or not material.use_nodes:
-		return False
-
-	for node in material.node_tree.nodes:
-		if node.type == 'TEX_IMAGE' and node.image is not None:
-			return True
-	return False
+from .state import generated_material_counter
+from .utils.mesh.detection import has_image_texture
 
 def create_new_generated_material():
 	"""
@@ -93,31 +78,57 @@ def add_texture_node(material, bsdf_node, texture_path):
 
 	return tex_image  # <-- RETURN IT!
 
-def add_emission_layer(material, bsdf_node, texture_node=None, strength=1.0, factor=0.25):
-	"""
-	Adds an emission node and mixes it with the BSDF for visual enhancement.
-
-	Optional texture input controls the emission color.
-	Returns the mix shader node as the new shader output.
-	"""
-
+def add_emission_layer(material, bsdf_node, texture_node=None, strength=1.0):
 	nodes = material.node_tree.nodes
 	links = material.node_tree.links
 
 	emission = nodes.new("ShaderNodeEmission")
-	emission.inputs["Strength"].default_value = strength
 	emission.location = (200, -200)
 
 	mix = nodes.new("ShaderNodeMixShader")
-	mix.inputs["Fac"].default_value = factor
 	mix.location = (400, 0)
 
-	# If we have a texture, connect it to Emission color too
+	# Default emission color fallback
+	emission.inputs["Color"].default_value = bsdf_node.inputs["Base Color"].default_value
+
 	if texture_node:
+		# Separate RGB
+		sep_rgb = nodes.new("ShaderNodeSeparateRGB")
+		sep_rgb.location = (-100, -100)
+		links.new(texture_node.outputs["Color"], sep_rgb.inputs["Image"])
+
+		# Math node to average R+G+B
+		math_avg = nodes.new("ShaderNodeMath")
+		math_avg.operation = 'ADD'
+		math_avg.location = (50, -100)
+		links.new(sep_rgb.outputs["R"], math_avg.inputs[0])
+		links.new(sep_rgb.outputs["G"], math_avg.inputs[1])
+
+		math_avg2 = nodes.new("ShaderNodeMath")
+		math_avg2.operation = 'ADD'
+		math_avg2.location = (200, -100)
+		links.new(math_avg.outputs[0], math_avg2.inputs[0])
+		links.new(sep_rgb.outputs["B"], math_avg2.inputs[1])
+
+		# Divide by 3
+		math_div = nodes.new("ShaderNodeMath")
+		math_div.operation = 'DIVIDE'
+		math_div.inputs[1].default_value = 3.0
+		math_div.location = (350, -100)
+		links.new(math_avg2.outputs[0], math_div.inputs[0])
+
+		# Multiply by strength
+		math_strength = nodes.new("ShaderNodeMath")
+		math_strength.operation = 'MULTIPLY'
+		math_strength.inputs[1].default_value = strength
+		math_strength.location = (500, -100)
+		links.new(math_div.outputs[0], math_strength.inputs[0])
+
+		# Plug into Emission Strength
+		links.new(math_strength.outputs[0], emission.inputs["Strength"])
+
+		# Reuse the texture for Emission Color
 		links.new(texture_node.outputs["Color"], emission.inputs["Color"])
-	else:
-		# Use BSDF base color input as fallback
-		emission.inputs["Color"].default_value = bsdf_node.inputs["Base Color"].default_value
 
 	links.new(bsdf_node.outputs["BSDF"], mix.inputs[1])
 	links.new(emission.outputs["Emission"], mix.inputs[2])

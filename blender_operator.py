@@ -1,10 +1,16 @@
+# blender_operator.py
+
 import bpy
 import os
 from bpy.types import Operator
-from .state import flagged_complex_materials, generated_material_counter
-from .fbx_handler import create_output_folder, get_fbx_files_in_folder, import_fbx, export_as_glb
-from .material_utils import assign_new_generated_material, create_error_material
-from .blender_utils import clear_scene
+
+from .state import generated_material_counter
+from .importers.fbx import import_fbx
+from .exporters.glb import export_as_glb
+from .material_operations import assign_new_generated_material
+from .utils.blender import clear_scene
+from .utils.file_operations import get_files_in_folder
+from .utils.folder_operations import create_output_folder
 
 
 class ASSET_OT_ProcessFBX(Operator):
@@ -60,7 +66,7 @@ class ASSET_OT_ProcessFBX(Operator):
 			self.report({'ERROR'}, "Failed to create output folder")
 			return {'CANCELLED'}
 
-		fbx_files = get_fbx_files_in_folder(input_folder)
+		fbx_files = get_files_in_folder(input_folder, "fbx")
 		if not fbx_files:
 			self.report({'WARNING'}, "No FBX files found")
 			return {'CANCELLED'}
@@ -76,15 +82,11 @@ class ASSET_OT_ProcessFBX(Operator):
 					assign_new_generated_material(obj, texture_file, normalmap_file)
 
 			export_as_glb(fbx_file, output_folder)
+			global generated_material_counter
+			generated_material_counter = 0
 
 		self.report({'INFO'}, f"Processed {len(fbx_files)} file(s).")
 		clear_scene()
-
-		global generated_material_counter
-		generated_material_counter = 0
-
-		if flagged_complex_materials:
-			bpy.ops.asset.debug_summary('INVOKE_DEFAULT')
 
 		if settings.auto_find_texture:
 			settings.texture_file = ""

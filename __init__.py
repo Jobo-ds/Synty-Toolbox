@@ -9,16 +9,18 @@ bl_info = {
 	"category": "Import-Export",
 }
 
-from . import blender_operator, ui, debug_ui, file_sorter
+import bpy
+from .blender import register_classes
+from .blender_operator import ASSET_OT_ProcessFBX
+from . import file_sorter
+
 
 def register():
-    ui.register()
-    blender_operator.bpy.utils.register_class(blender_operator.ASSET_OT_ProcessFBX)
+    register_classes.register()
+    bpy.utils.register_class(ASSET_OT_ProcessFBX)
     file_sorter.register()
-    debug_ui.register_debug_operators()
 
 def unregister():
-    debug_ui.unregister_debug_operators()
     file_sorter.unregister()
-    blender_operator.bpy.utils.unregister_class(blender_operator.ASSET_OT_ProcessFBX)
-    ui.unregister()
+    bpy.utils.unregister_class(ASSET_OT_ProcessFBX)
+    register_classes.unregister()
