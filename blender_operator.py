@@ -74,7 +74,13 @@ class ASSET_OT_ProcessFBX(Operator):
 			if not texture_file and not normalmap_file:
 				self.report({'WARNING'}, "No texture or normal map found — proceeding with base material only.")
 
-			output_folder = create_output_folder(folder)
+			if settings.output_root_folder:
+				relative_path = os.path.relpath(folder, input_folder)
+				output_folder = os.path.join(settings.output_root_folder, relative_path)
+				os.makedirs(output_folder, exist_ok=True)
+			else:
+				output_folder = create_output_folder(folder)
+				
 			if not output_folder:
 				self.report({'ERROR'}, "Failed to create output folder")
 				return {'CANCELLED'}

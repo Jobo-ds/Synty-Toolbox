@@ -27,6 +27,13 @@ class AssetProcessorSettings(PropertyGroup):
 		description="Search recursively through subfolders for FBX files",
 		default=False
 	) # type: ignore	
+
+	output_root_folder: StringProperty(
+		name="Output Folder",
+		description="If no output folder is set, it uses the input folder.",
+		subtype='DIR_PATH',
+		default=""
+	) # type: ignore	
 	
 	texture_file: StringProperty(
 		name="Base Color Texture",

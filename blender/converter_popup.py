@@ -60,6 +60,9 @@ class ASSET_OT_ConverterPopup(bpy.types.Operator):
 		split.prop(props, "search_subfolders", text="Process subfolders")
 
 		row = box.row()
+		box.prop(props, "output_root_folder", text="Output Folder (optional)")
+
+		row = box.row()
 		split = row.split(factor=0.8, align=True)
 		split.prop(self, "texture_file", text="Base Color Texture")
 		split.prop(props, "auto_find_texture", text="Auto-detect")
