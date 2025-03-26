@@ -12,9 +12,11 @@ def import_fbx(filepath):
 	Uses Blender's built-in FBX importer to load the specified file.
 	Applies optional rotation fix and cleans up common import clutter.
 	"""
+	scene = bpy.context.scene
+	settings = scene.asset_processor_settings
 
-	force_rotate = getattr(bpy.context.scene.asset_processor_settings, "character_rotate_fix", False)
-	auto_normalize_scale = getattr(bpy.context.scene.asset_processor_settings, "auto_normalize_scale", False)
+	force_rotate = settings.character_rotate_fix
+	auto_normalize_scale = settings.auto_normalize_scale
 
 	scale_flags = set()
 
@@ -31,8 +33,8 @@ def import_fbx(filepath):
 
 	# Operations on objects
 	for obj in list(bpy.context.scene.objects):
-		# Clean up common FBX clutter
-		clean_up_clutter(obj)
+		if settings.remove_clutter:
+			clean_up_clutter(obj)
 		# Optional: Attempt to rotate armature (characers)
 		if force_rotate:
 			rotate_armatures(obj)

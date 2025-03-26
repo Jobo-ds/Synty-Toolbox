@@ -20,25 +20,22 @@ def create_new_generated_material():
 	nodes.clear()  # Clean slate
 	return mat
 
-def add_bsdf_node_with_inheritance(material, original_material):
+def add_bsdf_node(material, original_material, inherit_values=True):
 	"""
-	Adds a Principled BSDF node to the material, inheriting values from the original.
+	Adds a Principled BSDF node to the material, optionally attempting to inherit values from the original.
 
-	Copies base color, roughness, metallic, and alpha if a BSDF node exists in the source.
-	Also configures transparency and backface settings.
 	"""
 
 	nodes = material.node_tree.nodes
 	bsdf = nodes.new("ShaderNodeBsdfPrincipled")
 	bsdf.location = (0, 0)
 
-	# Set default values
 	base_color = (0.8, 0.8, 0.8, 1.0)
 	roughness = 0.5
 	metallic = 0.0
 	alpha = 1.0
 
-	if original_material and original_material.use_nodes:
+	if inherit_values and original_material and original_material.use_nodes:
 		for node in original_material.node_tree.nodes:
 			if node.type == "BSDF_PRINCIPLED":
 				base_color = node.inputs["Base Color"].default_value[:]
@@ -78,61 +75,27 @@ def add_texture_node(material, bsdf_node, texture_path):
 
 	return tex_image  # <-- RETURN IT!
 
-def add_emission_layer(material, bsdf_node, texture_node=None, strength=1.0):
+def add_emission_layer(material, bsdf_node, texture_node=None, strength=1.0, factor=0.25):
 	nodes = material.node_tree.nodes
 	links = material.node_tree.links
 
 	emission = nodes.new("ShaderNodeEmission")
+	emission.inputs["Strength"].default_value = strength
 	emission.location = (200, -200)
 
 	mix = nodes.new("ShaderNodeMixShader")
+	mix.inputs["Fac"].default_value = factor
 	mix.location = (400, 0)
 
-	# Default emission color fallback
-	emission.inputs["Color"].default_value = bsdf_node.inputs["Base Color"].default_value
-
+	# If we have a texture, connect it to Emission color too
 	if texture_node:
-		# Separate RGB
-		sep_rgb = nodes.new("ShaderNodeSeparateRGB")
-		sep_rgb.location = (-100, -100)
-		links.new(texture_node.outputs["Color"], sep_rgb.inputs["Image"])
-
-		# Math node to average R+G+B
-		math_avg = nodes.new("ShaderNodeMath")
-		math_avg.operation = 'ADD'
-		math_avg.location = (50, -100)
-		links.new(sep_rgb.outputs["R"], math_avg.inputs[0])
-		links.new(sep_rgb.outputs["G"], math_avg.inputs[1])
-
-		math_avg2 = nodes.new("ShaderNodeMath")
-		math_avg2.operation = 'ADD'
-		math_avg2.location = (200, -100)
-		links.new(math_avg.outputs[0], math_avg2.inputs[0])
-		links.new(sep_rgb.outputs["B"], math_avg2.inputs[1])
-
-		# Divide by 3
-		math_div = nodes.new("ShaderNodeMath")
-		math_div.operation = 'DIVIDE'
-		math_div.inputs[1].default_value = 3.0
-		math_div.location = (350, -100)
-		links.new(math_avg2.outputs[0], math_div.inputs[0])
-
-		# Multiply by strength
-		math_strength = nodes.new("ShaderNodeMath")
-		math_strength.operation = 'MULTIPLY'
-		math_strength.inputs[1].default_value = strength
-		math_strength.location = (500, -100)
-		links.new(math_div.outputs[0], math_strength.inputs[0])
-
-		# Plug into Emission Strength
-		links.new(math_strength.outputs[0], emission.inputs["Strength"])
-
-		# Reuse the texture for Emission Color
 		links.new(texture_node.outputs["Color"], emission.inputs["Color"])
+	else:
+		# Use BSDF base color input as fallback
+		emission.inputs["Color"].default_value = bsdf_node.inputs["Base Color"].default_value
 
 	links.new(bsdf_node.outputs["BSDF"], mix.inputs[1])
 	links.new(emission.outputs["Emission"], mix.inputs[2])
-
 	return mix
 
 def add_output_node(material, shader_output):
@@ -190,41 +153,55 @@ def assign_new_generated_material(obj, texture_path=None, normal_map_path=None):
 	Replaces all existing materials on the object with the new one.
 	"""
 
-	original_material = obj.active_material if obj.active_material else None
-	new_mat = create_new_generated_material()
-	bsdf = add_bsdf_node_with_inheritance(new_mat, original_material)
+	try:
+		scene = bpy.context.scene
+		settings = scene.asset_processor_settings
 
-	nodes = new_mat.node_tree.nodes
-	links = new_mat.node_tree.links
+		original_material = obj.active_material if obj.active_material else None
+		new_mat = create_new_generated_material()
+		bsdf = add_bsdf_node(new_mat, original_material, inherit_values=settings.inherit_material_values)
 
-	texture_node = None
+		nodes = new_mat.node_tree.nodes
+		links = new_mat.node_tree.links
 
-	scene = bpy.context.scene
-	force_texture = getattr(scene.asset_processor_settings, "force_texture", False)
+		texture_node = None
+		
+		force_texture = settings.force_texture
 
-	# Apply base color texture if allowed
-	if texture_path and (force_texture or (original_material and has_image_texture(original_material))):
-		print(f"[INFO] Applying base color texture to: {obj.name}")
-		texture_node = add_texture_node(new_mat, bsdf, texture_path)
+		# Apply base color texture if allowed
+		if texture_path and (force_texture or (original_material and has_image_texture(original_material))):
+			print(f"[INFO] Applying base color texture to: {obj.name}")
+			texture_node = add_texture_node(new_mat, bsdf, texture_path)
 
-	# Add emission layer based on texture (if available)
-	shader_output = add_emission_layer(new_mat, bsdf, texture_node)
+		# Add emission layer based on texture (if available)
+		if settings.use_emission:
+			shader_output = add_emission_layer(new_mat, bsdf, texture_node)
+		else:
+			shader_output = bsdf
 
-	# Optional: Apply normal map if provided
-	if normal_map_path:
-		print(f"[INFO] Applying normal map to: {obj.name}")
-		normal_node = nodes.new("ShaderNodeTexImage")
-		normal_node.image = bpy.data.images.load(normal_map_path, check_existing=True)
-		normal_node.image.colorspace_settings.name = 'Non-Color'
-		normal_node.location = (-300, -300)
+		# Optional: Apply normal map if provided
+		if normal_map_path:
+			print(f"[INFO] Applying normal map to: {obj.name}")
+			normal_node = nodes.new("ShaderNodeTexImage")
+			normal_node.image = bpy.data.images.load(normal_map_path, check_existing=True)
+			normal_node.image.colorspace_settings.name = 'Non-Color'
+			normal_node.location = (-300, -300)
 
-		normal_map = nodes.new("ShaderNodeNormalMap")
-		normal_map.location = (-100, -300)
+			normal_map = nodes.new("ShaderNodeNormalMap")
+			normal_map.location = (-100, -300)
 
-		links.new(normal_node.outputs["Color"], normal_map.inputs["Color"])
-		links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
+			links.new(normal_node.outputs["Color"], normal_map.inputs["Color"])
+			links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
 
-	add_output_node(new_mat, shader_output)
+		add_output_node(new_mat, shader_output)
 
-	obj.data.materials.clear()
-	obj.data.materials.append(new_mat)
+		obj.data.materials.clear()
+		obj.data.materials.append(new_mat)
+
+	except Exception as e:
+		print(f"[ERROR] Material assignment failed on {obj.name}: {e}")
+		if settings.use_error_material:
+			obj.data.materials.clear()
+			obj.data.materials.append(create_error_material())
+
+
