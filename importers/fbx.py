@@ -1,8 +1,8 @@
 # importers/fbx.py
 
 import bpy
-from .utils.mesh.clean_up import clean_up_clutter
-from .utils.mesh.corrections import rotate_armatures, normalize_object_scale
+from ..utils.mesh.clean_up import clean_up_clutter
+from ..utils.mesh.corrections import rotate_armatures, normalize_object_scale
 
 
 def import_fbx(filepath):

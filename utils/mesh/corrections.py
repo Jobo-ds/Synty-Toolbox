@@ -2,7 +2,7 @@
 
 import bpy
 import math
-from .blender import get_object_dimensions
+from ..blender import get_object_dimensions
 
 
 def normalize_object_scale(obj):
