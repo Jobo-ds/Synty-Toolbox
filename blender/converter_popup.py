@@ -52,7 +52,12 @@ class ASSET_OT_ConverterPopup(bpy.types.Operator):
 		# --- Input Section ---
 		layout.label(text="📂 Input")
 		box = layout.box()
-		box.prop(self, "input_folder", text="FBX Folder to Process")
+		
+
+		row = box.row()
+		split = row.split(factor=0.8, align=True)
+		split.prop(self, "input_folder", text="FBX Folder to Process")
+		split.prop(props, "search_subfolders", text="Process subfolders")
 
 		row = box.row()
 		split = row.split(factor=0.8, align=True)

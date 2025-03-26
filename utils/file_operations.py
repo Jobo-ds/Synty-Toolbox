@@ -20,3 +20,5 @@ def get_files_in_folder(folder_path, ext):
 	except Exception as e:
 		print(f"[ERROR] Failed to list files: {e}")
 		return []
+	
+	

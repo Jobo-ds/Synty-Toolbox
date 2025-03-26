@@ -21,6 +21,12 @@ class AssetProcessorSettings(PropertyGroup):
 		description="Folder containing FBX files to process",
 		subtype='DIR_PATH'
 	) # type: ignore
+
+	search_subfolders: BoolProperty(
+		name="Search Subfolders",
+		description="Search recursively through subfolders for FBX files",
+		default=False
+	) # type: ignore	
 	
 	texture_file: StringProperty(
 		name="Base Color Texture",

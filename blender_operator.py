@@ -10,7 +10,8 @@ from .exporters.glb import export_as_glb
 from .material_operations import assign_new_generated_material
 from .utils.blender import clear_scene
 from .utils.file_operations import get_files_in_folder
-from .utils.folder_operations import create_output_folder
+from .utils.folder_operations import create_output_folder, get_subfolders
+from .utils.memory import purge_unused_data
 
 
 class ASSET_OT_ProcessFBX(Operator):
@@ -30,67 +31,80 @@ class ASSET_OT_ProcessFBX(Operator):
 	def execute(self, context):
 		settings = context.scene.asset_processor_settings
 		input_folder = settings.fbx_folder
-		texture_file = settings.texture_file
-		normalmap_file = settings.normal_map_file
 
-		# Auto-detect base color texture
-		if not texture_file and settings.auto_find_texture:
-			for filename in os.listdir(input_folder):
-				if filename.lower().endswith(".png") and "normal" not in filename.lower():
-					texture_file = os.path.join(input_folder, filename)
-					print(f"[AUTO-TEXTURE] Using found texture: {texture_file}")
-					break
+		folders_to_process = []
 
-		# Auto-detect normal map
-		if not normalmap_file and settings.auto_find_normal:
-			for filename in os.listdir(input_folder):
-				if "normal" in filename.lower() and filename.lower().endswith(".png"):
-					normalmap_file = os.path.join(input_folder, filename)
-					print(f"[AUTO-NORMAL] Using found normal map: {normalmap_file}")
-					break
+		if settings.search_subfolders:
+			folders = get_subfolders(input_folder, "fbx")
+			for folder in folders:
+				folders_to_process.append(folder)
+		else:
+			folders_to_process.append(input_folder)		
 
-		# Store updated values back to settings
-		settings.texture_file = texture_file
-		settings.normal_map_file = normalmap_file
 
-		# Validate folder and texture requirements
-		if not os.path.isdir(input_folder):
-			self.report({'ERROR'}, "Invalid FBX folder")
-			return {'CANCELLED'}
+		for folder in folders_to_process:
+			texture_file = settings.texture_file if not settings.auto_find_texture else ""
+			normalmap_file = settings.normal_map_file if not settings.auto_find_normal else ""
 
-		if not texture_file and not normalmap_file:
-			self.report({'WARNING'}, "No texture or normal map found — proceeding with base material only.")
+			# Auto-detect base color texture
+			if not texture_file and settings.auto_find_texture:
+				for filename in os.listdir(folder):
+					if filename.lower().endswith(".png") and "normal" not in filename.lower():
+						texture_file = os.path.join(folder, filename)
+						print(f"[AUTO-TEXTURE] Using found texture: {texture_file}")
+						break
 
-		output_folder = create_output_folder(input_folder)
-		if not output_folder:
-			self.report({'ERROR'}, "Failed to create output folder")
-			return {'CANCELLED'}
+			# Auto-detect normal map
+			if not normalmap_file and settings.auto_find_normal:
+				for filename in os.listdir(folder):
+					if "normal" in filename.lower() and filename.lower().endswith(".png"):
+						normalmap_file = os.path.join(folder, filename)
+						print(f"[AUTO-NORMAL] Using found normal map: {normalmap_file}")
+						break
 
-		fbx_files = get_files_in_folder(input_folder, "fbx")
-		if not fbx_files:
-			self.report({'WARNING'}, "No FBX files found")
-			return {'CANCELLED'}
+			# Store updated values back to settings
+			settings.texture_file = texture_file
+			settings.normal_map_file = normalmap_file
 
-		for fbx_file in fbx_files:
-			print(f"\n[PROCESSING] {fbx_file}")
+			# Validate folder and texture requirements
+			if not os.path.isdir(folder):
+				self.report({'ERROR'}, "Invalid FBX folder")
+				return {'CANCELLED'}
+
+			if not texture_file and not normalmap_file:
+				self.report({'WARNING'}, "No texture or normal map found — proceeding with base material only.")
+
+			output_folder = create_output_folder(folder)
+			if not output_folder:
+				self.report({'ERROR'}, "Failed to create output folder")
+				return {'CANCELLED'}
+
+			fbx_files = get_files_in_folder(folder, "fbx")
+			if not fbx_files:
+				self.report({'WARNING'}, "No FBX files found")
+				return {'CANCELLED'}
+
+			for fbx_file in fbx_files:
+				print(f"\n[PROCESSING] {fbx_file}")
+				clear_scene()
+				import_fbx(fbx_file)
+
+				# Assign generated materials
+				for obj in bpy.context.scene.objects:
+					if obj.type == 'MESH':
+						assign_new_generated_material(obj, texture_file, normalmap_file)
+
+				export_as_glb(fbx_file, output_folder)
+				global generated_material_counter
+				generated_material_counter = 0
+
+			self.report({'INFO'}, f"Processed {len(fbx_files)} file(s).")
 			clear_scene()
-			import_fbx(fbx_file)
+			purge_unused_data()
 
-			# Assign generated materials
-			for obj in bpy.context.scene.objects:
-				if obj.type == 'MESH':
-					assign_new_generated_material(obj, texture_file, normalmap_file)
-
-			export_as_glb(fbx_file, output_folder)
-			global generated_material_counter
-			generated_material_counter = 0
-
-		self.report({'INFO'}, f"Processed {len(fbx_files)} file(s).")
-		clear_scene()
-
-		if settings.auto_find_texture:
-			settings.texture_file = ""
-		if settings.auto_find_normal:
-			settings.normal_map_file = ""
+			if settings.auto_find_texture:
+				settings.texture_file = ""
+			if settings.auto_find_normal:
+				settings.normal_map_file = ""
 
 		return {'FINISHED'}
