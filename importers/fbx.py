@@ -4,6 +4,23 @@ import bpy
 from ..utils.mesh.clean_up import clean_up_clutter
 from ..utils.mesh.corrections import rotate_armatures, normalize_object_scale
 
+def is_ascii_fbx(filepath):
+	"""
+	Detects if an FBX file is in ASCII format.
+	Blender only supports binary FBX files.
+	"""
+	try:
+		with open(filepath, 'rb') as f:
+			header = f.read(512)
+			if b'Kaydara FBX ASCII' in header:
+				return True
+			if header.strip().startswith(b';'):  # Legacy ASCII FBX signature
+				return True
+			return False
+	except Exception as e:
+		print(f"[ERROR] Could not read FBX header: {e}")
+		return False
+
 
 def import_fbx(filepath):
 	"""
@@ -12,6 +29,13 @@ def import_fbx(filepath):
 	Uses Blender's built-in FBX importer to load the specified file.
 	Applies optional rotation fix and cleans up common import clutter.
 	"""
+
+	if is_ascii_fbx(filepath):
+		raise RuntimeError(
+			f"ASCII FBX files are not supported:\n{filepath}\n\n"
+			"Use Autodesk FBX Converter to convert it to binary format."
+		)
+
 	scene = bpy.context.scene
 	settings = scene.asset_processor_settings
 

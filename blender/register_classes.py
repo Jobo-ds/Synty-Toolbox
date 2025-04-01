@@ -5,13 +5,15 @@ from .converter_popup import ASSET_OT_ConverterPopup
 from .autosort_popup import ASSET_OT_OpenSortPopup
 from .settings import AssetProcessorSettings
 from .panel import ASSET_PT_ProcessorPanel
+from ..ui.ascii_dialog import SFC_OT_fbx_ascii_dialog
 
 # Registration
 classes = (
 	AssetProcessorSettings,
 	ASSET_PT_ProcessorPanel,
 	ASSET_OT_ConverterPopup,
-	ASSET_OT_OpenSortPopup
+	ASSET_OT_OpenSortPopup,
+	SFC_OT_fbx_ascii_dialog
 )
 
 def register():

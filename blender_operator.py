@@ -93,7 +93,12 @@ class ASSET_OT_ProcessFBX(Operator):
 			for fbx_file in fbx_files:
 				print(f"\n[PROCESSING] {fbx_file}")
 				clear_scene()
-				import_fbx(fbx_file)
+				try:
+					import_fbx(fbx_file)
+				except RuntimeError as e:
+					bpy.ops.sfc.fbx_ascii_dialog('INVOKE_DEFAULT', message=fbx_file)
+					return {'CANCELLED'}
+
 
 				# Assign generated materials
 				for obj in bpy.context.scene.objects:

@@ -22,5 +22,3 @@ class ASSET_PT_ProcessorPanel(bpy.types.Panel):
 		layout.operator("asset.open_texture_folder_popup", text="Open Synty Converter", icon='FILE_3D')
 		layout.separator()
 		layout.operator("asset.open_sort_popup", text="Open Sort Tool", icon='FILE_FOLDER')
-		layout.separator()
-		layout.operator("asset.reload_synty_addon", text="Reload Addon (Dev)", icon='FILE_REFRESH')
