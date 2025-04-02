@@ -44,16 +44,13 @@ def get_category_from_name(filename):
 
 
 
-class ASSET_OT_SortFilesByName(bpy.types.Operator):
-	bl_idname = "asset.sort_files_by_name"
+class SSTOOL_OT_SortFilesToFolders(bpy.types.Operator):
+	bl_idname = "sstool.sort_files_to_folders"
 	bl_label = "Auto Sort Files by Name"
 	bl_description = "Sorts FBX files into folders based on naming conventions"
 
 	def execute(self, context):
-		import os
-		import shutil
-
-		folder = context.scene.asset_processor_settings.sort_folder
+		folder = context.scene.filesorter_props
 		if not os.path.isdir(folder):
 			self.report({'ERROR'}, "Invalid FBX folder.")
 			return {'CANCELLED'}
@@ -86,12 +83,3 @@ class ASSET_OT_SortFilesByName(bpy.types.Operator):
 
 		self.report({'INFO'}, "FBX files sorted successfully.")
 		return {'FINISHED'}
-
-
-
-def register():
-	bpy.utils.register_class(ASSET_OT_SortFilesByName)
-
-
-def unregister():
-	bpy.utils.unregister_class(ASSET_OT_SortFilesByName)

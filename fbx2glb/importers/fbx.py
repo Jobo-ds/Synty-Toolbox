@@ -1,8 +1,8 @@
 # importers/fbx.py
 
 import bpy
-from ..utils.mesh.clean_up import clean_up_clutter
-from ..utils.mesh.corrections import rotate_armatures, normalize_object_scale
+from ..utils.clean_up import clean_up_clutter
+from ..utils.corrections import rotate_armatures, normalize_object_scale
 
 def is_ascii_fbx(filepath):
 	"""
@@ -37,7 +37,7 @@ def import_fbx(filepath):
 		)
 
 	scene = bpy.context.scene
-	settings = scene.asset_processor_settings
+	settings = scene.fbx2gbl_props
 
 	force_rotate = settings.character_rotate_fix
 	auto_normalize_scale = settings.auto_normalize_scale

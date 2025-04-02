@@ -1,20 +1,10 @@
-# blender/settings.py
-
 import bpy
 from bpy.props import BoolProperty, StringProperty
 from bpy.types import PropertyGroup
 
-# Property Group to store settings
-class AssetProcessorSettings(PropertyGroup):
-	"""
-	Holds all user-configurable options for the asset processor.
-
-	Stored in the Scene to persist between Blender sessions.
-	"""
+class SSTOOL_PG_FBX2GLBProperties(PropertyGroup):
 	
-	"""
-		Inputs
-	"""
+	# Inputs
 
 	fbx_folder: StringProperty(
 		name="FBX Folder",
@@ -59,9 +49,7 @@ class AssetProcessorSettings(PropertyGroup):
 		default=True
 	) # type: ignore
 
-	"""
-		Mesh Options
-	"""
+	#Mesh Options
 
 	inherit_material_values: BoolProperty(
 		name="Inherit Material Values",
@@ -87,10 +75,7 @@ class AssetProcessorSettings(PropertyGroup):
 		default=True
 	) # type: ignore	
 
-
-	"""
-		Extras
-	"""
+	# Extras
 
 	use_emission: BoolProperty(
 		name="Add Emission Layer",
@@ -110,12 +95,4 @@ class AssetProcessorSettings(PropertyGroup):
 		default=True
 	) # type: ignore	
 
-	"""
-		Sort Folder
-	"""	
 
-	sort_folder: StringProperty(
-		name="Sort Folder",
-		description="Folder containing FBX files to sort",
-		subtype='DIR_PATH',
-	) # type: ignore	

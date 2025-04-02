@@ -1,6 +1,6 @@
 import bpy
 
-class SFC_OT_fbx_ascii_dialog(bpy.types.Operator):
+class SSTOOL_OT_ShowFbxAsciiDialog(bpy.types.Operator):
     bl_idname = "sfc.fbx_ascii_dialog"
     bl_label = "ASCII FBX Not Supported"
 

@@ -1,3 +1,5 @@
+import bpy  # type: ignore # noqa: F401
+from . import register_classes
 
 bl_info = {
 	"name": "Converter for Synty Sourcefiles",
@@ -5,22 +7,12 @@ bl_info = {
 	"version": (1, 0, 0),
 	"blender": (2, 93, 0),
 	"location": "View3D > Sidebar > Asset Tools",
-	"description": "Converts sourcefiles from Synty Studios to GLB.",
+	"description": "Toolbox for working with Synty Files.",
 	"category": "Import-Export",
 }
 
-import bpy
-from .blender import register_classes
-from .blender_operator import ASSET_OT_ProcessFBX
-from . import file_sorter
-
-
 def register():
     register_classes.register()
-    bpy.utils.register_class(ASSET_OT_ProcessFBX)
-    file_sorter.register()
 
 def unregister():
-    file_sorter.unregister()
-    bpy.utils.unregister_class(ASSET_OT_ProcessFBX)
     register_classes.unregister()

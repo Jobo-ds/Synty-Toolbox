@@ -3,33 +3,26 @@
 import bpy
 import os
 from bpy.types import Operator
+import pathlib
 
-from .state import generated_material_counter
+from ..state import generated_material_counter
 from .importers.fbx import import_fbx
 from .exporters.glb import export_as_glb
-from .material_operations import assign_new_generated_material
-from .utils.blender import clear_scene
-from .utils.file_operations import get_files_in_folder
-from .utils.folder_operations import create_output_folder, get_subfolders
-from .utils.memory import purge_unused_data
+from .utils.material_operations import assign_new_generated_material
+from ..utils.blender import clear_scene
+from ..utils.file_operations import get_files_in_folder
+from ..utils.folder_operations import create_output_folder, get_subfolders
+from ..utils.memory import purge_unused_data
 
 
-class ASSET_OT_ProcessFBX(Operator):
-	"""
-	Operator to process Synty FBX source files into GLB format.
-
-	This operator imports all FBX files from a specified folder, assigns clean 
-	generated materials to each mesh object using a chosen texture and optional normal map,
-	and exports each processed file as a GLB.
-	"""	
-	
-	bl_idname = "asset.process_synty_sourcefiles"
+class SSTOOL_OT_FBX2GLBConverter(Operator):
+	bl_idname = "sstool.fbx2glb_converter"
 	bl_label = "Process FBX Files"
 	bl_description = "Imports FBX files, creates fresh materials, and exports as GLB"
 	bl_options = {'REGISTER', 'UNDO'}
 
 	def execute(self, context):
-		settings = context.scene.asset_processor_settings
+		settings = context.scene.fbx2gbl_props
 		input_folder = settings.fbx_folder
 
 		folders_to_process = []
@@ -119,3 +112,4 @@ class ASSET_OT_ProcessFBX(Operator):
 				settings.normal_map_file = ""
 
 		return {'FINISHED'}
+

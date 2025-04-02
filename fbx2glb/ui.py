@@ -3,23 +3,16 @@
 import bpy
 from bpy.props import BoolProperty, StringProperty
 
-class ASSET_OT_ConverterPopup(bpy.types.Operator):
-	"""
-	Popup dialog for selecting input FBX folder and texture file.
-
-	Stores input values into the scene settings and triggers processing.
-	Also displays toggle options from the sidebar configuration.
-	"""
-
-	bl_idname = "asset.open_texture_folder_popup"
-	bl_label = "Texture and Folder Inputs"
+class SSTOOL_OT_FBX2BlendPopup(bpy.types.Operator):
+	bl_idname = "sstool.fbx2glb_popup"
+	bl_label = "FBX to GLB Converter"
 
 	texture_file: StringProperty(name="Texture File", subtype='FILE_PATH')
 	input_folder: StringProperty(name="Input Folder", subtype='DIR_PATH')
 	normal_map_file: StringProperty(name="Normal Map", subtype='FILE_PATH')
 
 	def execute(self, context):
-		settings = context.scene.asset_processor_settings
+		settings = context.scene.fbx2gbl_props
 
 		# Store popup values into scene settings
 		settings.texture_file = self.texture_file
@@ -27,7 +20,7 @@ class ASSET_OT_ConverterPopup(bpy.types.Operator):
 		settings.fbx_folder = self.input_folder
 
 		# Now invoke the processing operator
-		bpy.ops.asset.process_synty_sourcefiles('INVOKE_DEFAULT')
+		bpy.ops.sstool.fbx2glb_converter('INVOKE_DEFAULT')
 
 		return {'FINISHED'}
 
@@ -36,7 +29,7 @@ class ASSET_OT_ConverterPopup(bpy.types.Operator):
 		Pre-fills popup fields with values from the scene settings.
 		"""
 
-		settings = context.scene.asset_processor_settings
+		settings = context.scene.fbx2gbl_props
 		self.texture_file = settings.texture_file
 		self.normal_map_file = settings.normal_map_file
 		self.input_folder = settings.fbx_folder
@@ -45,7 +38,7 @@ class ASSET_OT_ConverterPopup(bpy.types.Operator):
 
 	def draw(self, context):
 		layout = self.layout
-		props = context.scene.asset_processor_settings
+		props = context.scene.fbx2gbl_props
 
 		layout.label(text="Settings for the conversion depend on the state of the meshes you need to convert.")
 

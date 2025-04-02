@@ -1,6 +1,6 @@
 import bpy
-from .state import generated_material_counter
-from .utils.mesh.detection import has_image_texture
+from ...state import generated_material_counter
+from .detection import has_image_texture
 
 def create_new_generated_material():
 	"""
@@ -155,7 +155,7 @@ def assign_new_generated_material(obj, texture_path=None, normal_map_path=None):
 
 	try:
 		scene = bpy.context.scene
-		settings = scene.asset_processor_settings
+		settings = scene.fbx2gbl_props
 
 		original_material = obj.active_material if obj.active_material else None
 		new_mat = create_new_generated_material()
