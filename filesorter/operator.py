@@ -44,7 +44,7 @@ def get_category_from_name(filename):
 
 
 
-class SSTOOL_OT_SortFilesToFolders(bpy.types.Operator):
+class SSTOOL_OT_SortFilesOperator(bpy.types.Operator):
 	bl_idname = "sstool.sort_files_to_folders"
 	bl_label = "Auto Sort Files by Name"
 	bl_description = "Sorts FBX files into folders based on naming conventions"

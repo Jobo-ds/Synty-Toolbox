@@ -16,5 +16,6 @@ class SSTOOL_OT_GLB2BlendPopup(bpy.types.Operator):
 
 		layout.prop(props, "input_dir")
 		layout.prop(props, "output_dir")
+		layout.prop(props, "use_col_suffix")
 		layout.operator("object.convert_glb_to_blend")
 		

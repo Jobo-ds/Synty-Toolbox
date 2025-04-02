@@ -15,7 +15,7 @@ from ..utils.folder_operations import create_output_folder, get_subfolders
 from ..utils.memory import purge_unused_data
 
 
-class SSTOOL_OT_FBX2GLBConverter(Operator):
+class SSTOOL_OT_FBX2GLBOperator(Operator):
 	bl_idname = "sstool.fbx2glb_converter"
 	bl_label = "Process FBX Files"
 	bl_description = "Imports FBX files, creates fresh materials, and exports as GLB"
