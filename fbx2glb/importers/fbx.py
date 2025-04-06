@@ -2,7 +2,7 @@
 
 import bpy
 from ..utils.clean_up import clean_up_clutter
-from ..utils.corrections import rotate_armatures, normalize_object_scale
+from ..utils.corrections import rotate_armatures, normalize_object_group_scale
 
 def is_ascii_fbx(filepath):
 	"""
@@ -63,7 +63,7 @@ def import_fbx(filepath):
 		if force_rotate:
 			rotate_armatures(obj)
 		# Optional: Attempt to normalize scale
-		if auto_normalize_scale:
-			normalize_object_scale(obj)
+		if auto_normalize_scale and obj.parent is None:
+			normalize_object_group_scale(obj)
 
 	bpy.context.scene['scale_flags'] = list(scale_flags)  # Store for export function

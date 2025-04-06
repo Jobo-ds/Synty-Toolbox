@@ -50,7 +50,7 @@ class SSTOOL_OT_SortFilesOperator(bpy.types.Operator):
 	bl_description = "Sorts FBX files into folders based on naming conventions"
 
 	def execute(self, context):
-		folder = context.scene.filesorter_props
+		folder = context.scene.filesorter_props.sort_folder
 		if not os.path.isdir(folder):
 			self.report({'ERROR'}, "Invalid FBX folder.")
 			return {'CANCELLED'}
