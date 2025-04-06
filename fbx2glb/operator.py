@@ -13,6 +13,7 @@ from ..utils.blender import clear_scene
 from ..utils.file_operations import get_files_in_folder
 from ..utils.folder_operations import create_output_folder, get_subfolders
 from ..utils.memory import purge_unused_data
+from ..simplifymat.operator import merge_duplicate_materials
 
 
 class SSTOOL_OT_FBX2GLBOperator(Operator):
@@ -98,6 +99,7 @@ class SSTOOL_OT_FBX2GLBOperator(Operator):
 					if obj.type == 'MESH':
 						assign_new_generated_material(obj, texture_file, normalmap_file)
 
+				merge_duplicate_materials()
 				export_as_glb(fbx_file, output_folder)
 				global generated_material_counter
 				generated_material_counter = 0
