@@ -1,3 +1,12 @@
+# ReadMe
+This is a plugin I made for myself to work with Synty assets.
+
+It can:
+
+- Convert FBX -> GLB
+- Convert GLB -> Blend
+- Auto sort into folders.
+
 # How to use
 Install plugin to Blender.
 
