@@ -19,6 +19,10 @@ from .simplifymat.ui import SSTOOL_OT_SimplifyMatPopup
 from .simplifymat.properties import SSTOOL_PG_SimplifyMatProperties
 from .simplifymat.operator import SSTOOL_OT_SimplifyMatOperator
 
+from .cleanblendforgodot.properties import SSTOOL_PG_CleanBlendProperties
+from .cleanblendforgodot.operator import SSTOOL_OT_CleanBlendOperator
+from .cleanblendforgodot.ui import SSTOOL_OT_CleanBlendPopup
+
 
 
 # Registration
@@ -52,7 +56,13 @@ simpifymat_classes = (
 	SSTOOL_PG_SimplifyMatProperties
 )
 
-classes = main_classes + filesorter_classes + fbx2glb_classes + glb2blend_classes + simpifymat_classes
+cleanblend_classes = (
+	SSTOOL_PG_CleanBlendProperties,  # must be registered BEFORE the pointer
+	SSTOOL_OT_CleanBlendOperator,
+	SSTOOL_OT_CleanBlendPopup,
+)
+
+classes = main_classes + filesorter_classes + fbx2glb_classes + glb2blend_classes + simpifymat_classes + cleanblend_classes
 
 def register():
 	"""
@@ -67,6 +77,9 @@ def register():
 	bpy.types.Scene.glb2blend_props = bpy.props.PointerProperty(type=SSTOOL_PG_GLB2BlendProperties)
 	bpy.types.Scene.filesorter_props = bpy.props.PointerProperty(type=SSTOOL_PG_FileSorterProperties)
 	bpy.types.Scene.simplifymat_props = bpy.props.PointerProperty(type=SSTOOL_PG_SimplifyMatProperties)
+	bpy.types.Scene.sstool_clean_blend_props = bpy.props.PointerProperty(type=SSTOOL_PG_CleanBlendProperties)
+
+
 
 def unregister():
 	"""
@@ -87,3 +100,5 @@ def unregister():
 		del bpy.types.Scene.filesorter_props
 	if hasattr(bpy.types.Scene, "simplifymat_props"):
 		del bpy.types.Scene.simplifymat_props		
+	if hasattr(bpy.types.Scene, "sstool_clean_blend_props"):
+		del bpy.types.Scene.sstool_clean_blend_props

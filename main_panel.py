@@ -23,5 +23,9 @@ class SSTOOL_PT_MainPanel(bpy.types.Panel):
 		layout.operator("sstool.glb2blend_popup", text="GLB to Blend Converter", icon='FILE_3D')
 		layout.separator()
 		layout.operator("sstool.file_sorter_popup", text="Open Sort Tool", icon='FILE_FOLDER')
+		
+		layout.separator()
+		layout.operator("sstool.clean_blend_popup", text="Clean Blend for Godot", icon='FILE_REFRESH')
+
 		layout.separator()
 		layout.operator("sstool.simplify_materials_popup", text="Simplify Materials", icon='SHADING_TEXTURE')
