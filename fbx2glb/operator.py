@@ -26,64 +26,85 @@ def simple_clear_scene():
 		print(f"[WARNING] Scene clear error: {e}")
 
 
-def replace_materials_with_texture(texture_path=None):
+def replace_materials_with_texture(texture_path=None, custom_material_name=None):
 	"""Replace all existing materials with simple texture-only materials"""
 	try:
-		if not texture_path or not os.path.exists(texture_path):
-			print("[INFO] No texture provided, keeping materials as-is")
+		print(f"[INFO] Processing materials with texture: {os.path.basename(texture_path) if texture_path else 'None'}")
+
+		# Get only materials that are actually being used by objects in the scene
+		used_materials = []
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH' and obj.data.materials:
+				for mat in obj.data.materials:
+					if mat and mat not in used_materials:
+						used_materials.append(mat)
+
+		if not used_materials:
+			print("[WARNING] No materials found on mesh objects")
 			return
 
-		print(f"[INFO] Replacing materials with texture: {os.path.basename(texture_path)}")
+		print(f"[DEBUG] Found {len(used_materials)} materials to process")
 
-		# Get all existing materials in the scene
-		existing_materials = list(bpy.data.materials)
+		# Simple approach: Just rename and modify existing materials
+		material_counter = 1
 
-		for original_mat in existing_materials:
-			if original_mat.users == 0:
-				continue  # Skip unused materials
+		for mat in used_materials:
+			old_name = mat.name
 
-			# Create new simple material with same name
-			new_mat = bpy.data.materials.new(name=original_mat.name + "_textured")
-			new_mat.use_nodes = True
+			# Rename the material first
+			if custom_material_name:
+				if len(used_materials) > 1:
+					mat.name = f"{custom_material_name}_{material_counter:02d}"
+					material_counter += 1
+				else:
+					mat.name = custom_material_name
+			else:
+				mat.name = f"Material_{material_counter:02d}"
+				material_counter += 1
 
-			# Clear default nodes
-			nodes = new_mat.node_tree.nodes
-			nodes.clear()
+			print(f"[DEBUG] Renamed material: {old_name} -> {mat.name}")
 
-			# Add Principled BSDF
-			bsdf = nodes.new("ShaderNodeBsdfPrincipled")
-			bsdf.location = (0, 0)
+			# Only modify the material if we have a texture
+			if texture_path and os.path.exists(texture_path):
+				# Clear and rebuild the material
+				mat.use_nodes = True
+				nodes = mat.node_tree.nodes
+				nodes.clear()
 
-			# Add Material Output
-			output = nodes.new("ShaderNodeOutputMaterial")
-			output.location = (300, 0)
+				# Add Principled BSDF
+				bsdf = nodes.new("ShaderNodeBsdfPrincipled")
+				bsdf.location = (0, 0)
 
-			# Connect BSDF to output
-			new_mat.node_tree.links.new(bsdf.outputs["BSDF"], output.inputs["Surface"])
+				# Add Material Output
+				output = nodes.new("ShaderNodeOutputMaterial")
+				output.location = (300, 0)
 
-			# Add texture
-			tex_node = nodes.new("ShaderNodeTexImage")
-			tex_node.image = bpy.data.images.load(texture_path, check_existing=True)
-			tex_node.location = (-300, 0)
-			new_mat.node_tree.links.new(tex_node.outputs["Color"], bsdf.inputs["Base Color"])
+				# Connect BSDF to output
+				mat.node_tree.links.new(bsdf.outputs["BSDF"], output.inputs["Surface"])
 
-			# Simple material settings - no alpha
-			new_mat.blend_method = 'OPAQUE'
+				# Add texture
+				tex_node = nodes.new("ShaderNodeTexImage")
+				tex_node.image = bpy.data.images.load(texture_path, check_existing=True)
+				tex_node.location = (-300, 0)
+				mat.node_tree.links.new(tex_node.outputs["Color"], bsdf.inputs["Base Color"])
 
-			# Replace the material on all objects that use it
-			for obj in bpy.data.objects:
-				if obj.type == 'MESH' and obj.data.materials:
-					for i, mat_slot in enumerate(obj.data.materials):
-						if mat_slot == original_mat:
-							obj.data.materials[i] = new_mat
+				# Simple material settings - no alpha
+				mat.blend_method = 'OPAQUE'
 
-			# Remove the original material
-			bpy.data.materials.remove(original_mat)
+				print(f"[DEBUG] Applied texture to material: {mat.name}")
 
-		print(f"[INFO] Replaced {len(existing_materials)} materials with textured versions")
+		# Force a data update
+		bpy.context.view_layer.update()
+
+		if custom_material_name:
+			print(f"[INFO] Renamed {len(used_materials)} materials with custom name '{custom_material_name}'")
+		else:
+			print(f"[INFO] Renamed {len(used_materials)} materials")
 
 	except Exception as e:
-		print(f"[ERROR] Material replacement failed: {e}")
+		print(f"[ERROR] Material processing failed: {e}")
+		import traceback
+		traceback.print_exc()
 
 
 def normalize_object_scales():
@@ -214,7 +235,22 @@ class SSTOOL_OT_FBX2GLBOperator(Operator):
 
 						# Replace all materials with simple textured materials
 						print("[INFO] Replacing materials with texture")
-						replace_materials_with_texture(texture_file)
+						custom_name = props.custom_material_name if props.custom_material_name.strip() else None
+						replace_materials_with_texture(texture_file, custom_name)
+
+						# Debug: Show what materials exist before export
+						print("[DEBUG] Materials before export:")
+						for mat in bpy.data.materials:
+							if mat.users > 0:
+								print(f"  - {mat.name} (users: {mat.users})")
+
+						# Debug: Also show what materials are assigned to objects
+						print("[DEBUG] Materials on objects:")
+						for obj in bpy.data.objects:
+							if obj.type == 'MESH' and obj.data.materials:
+								for i, mat in enumerate(obj.data.materials):
+									if mat:
+										print(f"  - Object '{obj.name}' slot {i}: {mat.name}")
 
 						# Export GLB
 						print(f"[INFO] Exporting GLB: {filename}")

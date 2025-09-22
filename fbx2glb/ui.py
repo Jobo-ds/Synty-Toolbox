@@ -69,6 +69,7 @@ class SSTOOL_OT_FBX2BlendPopup(bpy.types.Operator):
 
 		box.prop(self, "texture_file", text="Base Texture")
 		box.prop(props, "auto_find_texture", text="Auto-detect texture")
+		box.prop(props, "custom_material_name", text="Material Name")
 
 		# --- Mesh Options ---
 		left_col.separator()

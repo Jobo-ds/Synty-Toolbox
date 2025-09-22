@@ -37,6 +37,12 @@ class SSTOOL_PG_FBX2GLBProperties(PropertyGroup):
 		default=True
 	) # type: ignore
 
+	custom_material_name: StringProperty(
+		name="Material Name",
+		description="Custom name for the generated materials (leave blank for auto-naming)",
+		default=""
+	) # type: ignore
+
 	normal_map_file: StringProperty(
 		name="Normal Map",
 		description="Optional normal map to apply to the material",

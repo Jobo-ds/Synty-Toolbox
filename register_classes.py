@@ -15,7 +15,7 @@ from .fbx2glb.utils.ascii_warning import SSTOOL_OT_ShowFbxAsciiDialog
 
 from .glb2blend.ui import SSTOOL_OT_GLB2BlendPopup
 from .glb2blend.properties import SSTOOL_PG_GLB2BlendProperties
-from .glb2blend.operator import SSTOOL_OT_GLB2BlendOperator
+from .glb2blend.operator import SSTOOL_OT_GLB2BlendOperator, SSTOOL_OT_TestGLB2BlendOperator
 
 from .simplifymat.ui import SSTOOL_OT_SimplifyMatPopup
 from .simplifymat.properties import SSTOOL_PG_SimplifyMatProperties
@@ -51,6 +51,7 @@ fbx2glb_classes = (
 glb2blend_classes = (
 	SSTOOL_OT_GLB2BlendPopup,
 	SSTOOL_OT_GLB2BlendOperator,
+	SSTOOL_OT_TestGLB2BlendOperator,
 	SSTOOL_PG_GLB2BlendProperties
 )
 
