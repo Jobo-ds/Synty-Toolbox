@@ -37,7 +37,7 @@ def import_fbx(filepath):
 		)
 
 	scene = bpy.context.scene
-	settings = scene.fbx2gbl_props
+	settings = scene.fbx2glb_props
 
 	force_rotate = settings.character_rotate_fix
 	auto_normalize_scale = settings.auto_normalize_scale

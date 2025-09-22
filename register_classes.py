@@ -9,6 +9,8 @@ from .filesorter.operator import SSTOOL_OT_SortFilesOperator
 from .fbx2glb.ui import SSTOOL_OT_FBX2BlendPopup
 from .fbx2glb.properties import SSTOOL_PG_FBX2GLBProperties
 from .fbx2glb.operator import SSTOOL_OT_FBX2GLBOperator
+from .fbx2glb.test_operator import SSTOOL_OT_TestFBX2GLBOperator
+from .fbx2glb.preview import SSTOOL_OT_PreviewBatchOperator
 from .fbx2glb.utils.ascii_warning import SSTOOL_OT_ShowFbxAsciiDialog
 
 from .glb2blend.ui import SSTOOL_OT_GLB2BlendPopup
@@ -41,6 +43,8 @@ filesorter_classes = (
 fbx2glb_classes = (
 	SSTOOL_OT_FBX2BlendPopup,
 	SSTOOL_OT_FBX2GLBOperator,
+	SSTOOL_OT_TestFBX2GLBOperator,
+	SSTOOL_OT_PreviewBatchOperator,
 	SSTOOL_PG_FBX2GLBProperties
 )
 
@@ -73,7 +77,7 @@ def register():
 
 	for cls in classes:
 		bpy.utils.register_class(cls)
-	bpy.types.Scene.fbx2gbl_props = bpy.props.PointerProperty(type=SSTOOL_PG_FBX2GLBProperties)
+	bpy.types.Scene.fbx2glb_props = bpy.props.PointerProperty(type=SSTOOL_PG_FBX2GLBProperties)
 	bpy.types.Scene.glb2blend_props = bpy.props.PointerProperty(type=SSTOOL_PG_GLB2BlendProperties)
 	bpy.types.Scene.filesorter_props = bpy.props.PointerProperty(type=SSTOOL_PG_FileSorterProperties)
 	bpy.types.Scene.simplifymat_props = bpy.props.PointerProperty(type=SSTOOL_PG_SimplifyMatProperties)
@@ -92,8 +96,8 @@ def unregister():
 	for cls in reversed(classes):
 		bpy.utils.unregister_class(cls)
 
-	if hasattr(bpy.types.Scene, "fbx2gbl_props"):
-		del bpy.types.Scene.fbx2gbl_props
+	if hasattr(bpy.types.Scene, "fbx2glb_props"):
+		del bpy.types.Scene.fbx2glb_props
 	if hasattr(bpy.types.Scene, "glb2blend_props"):
 		del bpy.types.Scene.glb2blend_props
 	if hasattr(bpy.types.Scene, "filesorter_props"):

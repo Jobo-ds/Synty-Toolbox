@@ -1,6 +1,8 @@
 import bpy
 from ...state import generated_material_counter
 from .detection import has_image_texture
+# Removed logger import to avoid conflicts
+from ..materials.material_factory import material_factory
 
 def create_new_generated_material():
 	"""
@@ -51,7 +53,8 @@ def add_bsdf_node(material, original_material, inherit_values=True):
 
 	# Optional: ensure material is set up for transparency
 	material.blend_method = 'BLEND'
-	material.shadow_method = 'HASHED'
+	if hasattr(material, 'shadow_method'):
+		material.shadow_method = 'HASHED'
 	material.use_backface_culling = False 
 
 	return bsdf
@@ -125,7 +128,8 @@ def create_error_material(name="ERROR_MATERIAL"):
 	mat = bpy.data.materials.new(name=name)
 	mat.use_nodes = True
 	mat.blend_method = 'OPAQUE'
-	mat.shadow_method = 'NONE'
+	if hasattr(mat, 'shadow_method'):
+		mat.shadow_method = 'NONE'
 
 	nodes = mat.node_tree.nodes
 	links = mat.node_tree.links
@@ -147,61 +151,63 @@ def create_error_material(name="ERROR_MATERIAL"):
 
 def assign_new_generated_material(obj, texture_path=None, normal_map_path=None):
 	"""
-	Generates and assigns a new material to the given object.
-
-	Applies optional base color texture and normal map based on input paths and user settings.
-	Replaces all existing materials on the object with the new one.
+	Legacy function for backward compatibility.
+	Uses the new material factory system internally.
 	"""
-
 	try:
 		scene = bpy.context.scene
-		settings = scene.fbx2gbl_props
+		settings = scene.fbx2glb_props
 
-		original_material = obj.active_material if obj.active_material else None
-		new_mat = create_new_generated_material()
-		bsdf = add_bsdf_node(new_mat, original_material, inherit_values=settings.inherit_material_values)
-
-		nodes = new_mat.node_tree.nodes
-		links = new_mat.node_tree.links
-
-		texture_node = None
-		
-		force_texture = settings.force_texture
-
-		# Apply base color texture if allowed
-		if texture_path and (force_texture or (original_material and has_image_texture(original_material))):
-			print(f"[INFO] Applying base color texture to: {obj.name}")
-			texture_node = add_texture_node(new_mat, bsdf, texture_path)
-
-		# Add emission layer based on texture (if available)
-		if settings.use_emission:
-			shader_output = add_emission_layer(new_mat, bsdf, texture_node)
-		else:
-			shader_output = bsdf
-
-		# Optional: Apply normal map if provided
+		# Build texture map for new system
+		textures = {}
+		if texture_path:
+			textures['diffuse'] = texture_path
 		if normal_map_path:
-			print(f"[INFO] Applying normal map to: {obj.name}")
-			normal_node = nodes.new("ShaderNodeTexImage")
-			normal_node.image = bpy.data.images.load(normal_map_path, check_existing=True)
-			normal_node.image.colorspace_settings.name = 'Non-Color'
-			normal_node.location = (-300, -300)
+			textures['normal'] = normal_map_path
 
-			normal_map = nodes.new("ShaderNodeNormalMap")
-			normal_map.location = (-100, -300)
+		# Determine template based on settings
+		template_name = getattr(settings, 'material_template', 'standard')
+		if settings.use_emission and template_name == 'standard':
+			template_name = 'emissive'
 
-			links.new(normal_node.outputs["Color"], normal_map.inputs["Color"])
-			links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
+		# Get original material
+		original_material = obj.active_material if obj.active_material else None
 
-		add_output_node(new_mat, shader_output)
+		# Use new material factory
+		material = material_factory.create_material(
+			template_name=template_name,
+			obj=obj,
+			textures=textures,
+			inherit_from=original_material if settings.inherit_material_values else None,
+			settings={
+				'emission_strength': getattr(settings, 'emission_strength', 1.0),
+				'emission_factor': getattr(settings, 'emission_factor', 0.25)
+			}
+		)
 
-		obj.data.materials.clear()
-		obj.data.materials.append(new_mat)
+		if material:
+			obj.data.materials.clear()
+			obj.data.materials.append(material)
+			print(f"[DEBUG] Applied material to {obj.name} using legacy interface")
+		else:
+			print(f"[ERROR] Failed to create material for {obj.name}")
+			if settings.use_error_material:
+				error_material = material_factory.create_material('error', obj)
+				if error_material:
+					obj.data.materials.clear()
+					obj.data.materials.append(error_material)
 
 	except Exception as e:
 		print(f"[ERROR] Material assignment failed on {obj.name}: {e}")
+		scene = bpy.context.scene
+		settings = scene.fbx2glb_props
 		if settings.use_error_material:
-			obj.data.materials.clear()
-			obj.data.materials.append(create_error_material())
+			try:
+				error_material = material_factory.create_material('error', obj)
+				if error_material:
+					obj.data.materials.clear()
+					obj.data.materials.append(error_material)
+			except Exception as e2:
+				print(f"[ERROR] Failed to create error material: {e2}")
 
 
