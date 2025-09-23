@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(blender:*)",
+      "Bash(where:*)",
+      "Read(//c/Program Files/Blender Foundation/**)",
+      "Bash(\"C:\\Program Files\\Blender Foundation\\Blender 4.4\\blender.exe\" --background --python \"C:\\Users\\Joe\\AppData\\Roaming\\Blender Foundation\\Blender\\4.4\\scripts\\addons\\Synty-Toolbox\\test_apply_modifications.py\")",
+      "Bash(\"C:\\Program Files\\Blender Foundation\\Blender 4.4\\blender.exe\" --background --python \"C:\\Users\\Joe\\AppData\\Roaming\\Blender Foundation\\Blender\\4.4\\scripts\\addons\\Synty-Toolbox\\test_full_workflow.py\")",
+      "Bash(\"C:\\Program Files\\Blender Foundation\\Blender 4.4\\blender.exe\" --background --python \"C:\\Users\\Joe\\AppData\\Roaming\\Blender Foundation\\Blender\\4.4\\scripts\\addons\\Synty-Toolbox\\test_operator_direct.py\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

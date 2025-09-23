@@ -25,6 +25,14 @@ from .cleanblendforgodot.properties import SSTOOL_PG_CleanBlendProperties
 from .cleanblendforgodot.operator import SSTOOL_OT_CleanBlendOperator
 from .cleanblendforgodot.ui import SSTOOL_OT_CleanBlendPopup
 
+from .applymodifications.ui import SSTOOL_OT_ApplyModificationsPopup
+from .applymodifications.properties import SSTOOL_PG_ApplyModificationsProperties
+from .applymodifications.operator import SSTOOL_OT_ApplyModificationsOperator
+
+from .scaleobjects.ui import SSTOOL_OT_ScaleObjectsPopup
+from .scaleobjects.properties import SSTOOL_PG_ScaleObjectsProperties
+from .scaleobjects.operator import SSTOOL_OT_ScaleObjectsOperator
+
 
 
 # Registration
@@ -67,7 +75,19 @@ cleanblend_classes = (
 	SSTOOL_OT_CleanBlendPopup,
 )
 
-classes = main_classes + filesorter_classes + fbx2glb_classes + glb2blend_classes + simpifymat_classes + cleanblend_classes
+applymodifications_classes = (
+	SSTOOL_PG_ApplyModificationsProperties,  # must be registered BEFORE the pointer
+	SSTOOL_OT_ApplyModificationsOperator,
+	SSTOOL_OT_ApplyModificationsPopup,
+)
+
+scaleobjects_classes = (
+	SSTOOL_PG_ScaleObjectsProperties,  # must be registered BEFORE the pointer
+	SSTOOL_OT_ScaleObjectsOperator,
+	SSTOOL_OT_ScaleObjectsPopup,
+)
+
+classes = main_classes + filesorter_classes + fbx2glb_classes + glb2blend_classes + simpifymat_classes + cleanblend_classes + applymodifications_classes + scaleobjects_classes
 
 def register():
 	"""
@@ -83,6 +103,8 @@ def register():
 	bpy.types.Scene.filesorter_props = bpy.props.PointerProperty(type=SSTOOL_PG_FileSorterProperties)
 	bpy.types.Scene.simplifymat_props = bpy.props.PointerProperty(type=SSTOOL_PG_SimplifyMatProperties)
 	bpy.types.Scene.sstool_clean_blend_props = bpy.props.PointerProperty(type=SSTOOL_PG_CleanBlendProperties)
+	bpy.types.Scene.applymodifications_props = bpy.props.PointerProperty(type=SSTOOL_PG_ApplyModificationsProperties)
+	bpy.types.Scene.scaleobjects_props = bpy.props.PointerProperty(type=SSTOOL_PG_ScaleObjectsProperties)
 
 
 
@@ -104,6 +126,10 @@ def unregister():
 	if hasattr(bpy.types.Scene, "filesorter_props"):
 		del bpy.types.Scene.filesorter_props
 	if hasattr(bpy.types.Scene, "simplifymat_props"):
-		del bpy.types.Scene.simplifymat_props		
+		del bpy.types.Scene.simplifymat_props
 	if hasattr(bpy.types.Scene, "sstool_clean_blend_props"):
 		del bpy.types.Scene.sstool_clean_blend_props
+	if hasattr(bpy.types.Scene, "applymodifications_props"):
+		del bpy.types.Scene.applymodifications_props
+	if hasattr(bpy.types.Scene, "scaleobjects_props"):
+		del bpy.types.Scene.scaleobjects_props

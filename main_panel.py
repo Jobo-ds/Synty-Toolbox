@@ -29,3 +29,9 @@ class SSTOOL_PT_MainPanel(bpy.types.Panel):
 
 		layout.separator()
 		layout.operator("sstool.simplify_materials_popup", text="Simplify Materials", icon='SHADING_TEXTURE')
+
+		layout.separator()
+		layout.operator("sstool.apply_modifications_popup", text="Apply Modifications", icon='MODIFIER_ON')
+
+		layout.separator()
+		layout.operator("sstool.scale_objects_popup", text="Scale Objects", icon='OBJECT_ORIGIN')
